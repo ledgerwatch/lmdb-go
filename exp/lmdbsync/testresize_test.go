@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -61,7 +62,11 @@ func TestResize(t *testing.T) {
 	}
 
 	bin := filepath.Join(tempdir, "testresize")
-	build := exec.Command("go", "build", "-o", bin, "testresize")
+	ss := "./testresize"
+	if runtime.GOOS == "windows" {
+		ss = ".\\testresize"
+	}
+	build := exec.Command("go", "build", "-o", bin, ss)
 	//build.Dir = tempdir
 	build.Stderr = os.Stderr
 	err = build.Run()
