@@ -61,7 +61,7 @@ func TestResize(t *testing.T) {
 	}
 
 	bin := filepath.Join(tempdir, "testresize")
-	build := exec.Command("go", "build", "-o", bin, "'github.com/AskAlexSharov/lmdb-go/testresize'")
+	build := exec.Command("go", "build", "-o", bin, "github.com/AskAlexSharov/lmdb-go/testresize")
 	//build.Dir = tempdir
 	build.Stderr = os.Stderr
 	err = build.Run()
