@@ -23,7 +23,7 @@ jobs:
 
       - name: Lint
         run: |
-          make lint-deps
+          make lintci-deps
           make lint
 
       - name: Test
