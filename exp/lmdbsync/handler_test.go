@@ -2,6 +2,7 @@ package lmdbsync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -54,13 +55,6 @@ func TestHandlerChain(t *testing.T) {
 	}
 }
 
-type retryHandler struct{}
-
-func (*retryHandler) HandleTxnErr(ctx context.Context, env *Env, err error) (context.Context, error) {
-	return ctx, ErrTxnRetry
-
-}
-
 type passthroughHandler struct{}
 
 func (*passthroughHandler) HandleTxnErr(ctx context.Context, env *Env, err error) (context.Context, error) {
@@ -88,6 +82,10 @@ func TestMapFullHandler(t *testing.T) {
 
 	errother := fmt.Errorf("testerr")
 	ctx1, err := handler.HandleTxnErr(ctx, env, errother)
+	if err != nil && !errors.Is(err, errother) {
+		t.Error(err)
+		return
+	}
 	if ctx1 != ctx {
 		t.Errorf("ctx changed: %q (!= %q)", ctx1, ctx)
 	}
@@ -125,7 +123,7 @@ func TestMapResizedHandler(t *testing.T) {
 	handler := MapResizedHandler(2, func(int) time.Duration { return 100 * time.Microsecond })
 
 	errother := fmt.Errorf("testerr")
-	_, err = handler.HandleTxnErr(ctx, env, errother)
+	_, _ = handler.HandleTxnErr(ctx, env, errother)
 
 	errmapresized := &lmdb.OpError{
 		Op:    "lmdbsync_test_op",
