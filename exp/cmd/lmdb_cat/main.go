@@ -27,7 +27,7 @@ func main() {
 	lmdbcmd.PrintVersion()
 
 	dbs := flag.Args()
-	var specs []*catSpec
+	specs := make([]*catSpec, 0, len(dbs))
 	for _, db := range dbs {
 		spec, err := parseCatSpec(db)
 		if err != nil {

@@ -24,7 +24,7 @@ func TestTxn_ID(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if 0 != id0 {
+	if id0 != 0 {
 		t.Errorf("unexpected readonly id (before update): %v (!= %v)", id0, 0)
 	}
 
@@ -34,7 +34,7 @@ func TestTxn_ID(t *testing.T) {
 		return
 	}
 	defer txnCached.Abort()
-	if 0 != txnCached.ID() {
+	if txnCached.ID() != 0 {
 		t.Errorf("unexpected readonly id (before update): %v (!= %v)", txnCached.ID(), 0)
 	}
 	if txnCached.getID() != txnCached.ID() {
@@ -69,7 +69,7 @@ func TestTxn_ID(t *testing.T) {
 	id3 = txnInvalid.ID()
 
 	// The ID of txnCached will actually change during the call to
-	// txnCached.Renew().  It's imperitive that any ID cached in the Txn object
+	// txnCached.Renew().  It's imperative that any ID cached in the Txn object
 	// does not diverge.
 	if txnCached.ID() != txnCached.getID() {
 		t.Errorf("unexpected invalid id: %v (!= %v)", txnCached.ID(), txnCached.getID())
@@ -90,7 +90,7 @@ func TestTxn_ID(t *testing.T) {
 	if id1 != id2 {
 		t.Errorf("unexpected readonly id: %v (!= %v)", id2, id1)
 	}
-	if 0 != id3 {
+	if id3 != 0 {
 		t.Errorf("unexpected invalid id: %v (!= %v)", id3, 0)
 	}
 	if id1 != txnCached.ID() {
@@ -860,7 +860,7 @@ func TestTxn_Reset_doubleReset(t *testing.T) {
 }
 
 // This test demonstrates that Reset/Renew have no effect on writable
-// transactions. The transaction may be commited after Reset/Renew are called.
+// transactions. The transaction may be committed after Reset/Renew are called.
 func TestTxn_Reset_writeTxn(t *testing.T) {
 	env := setup(t)
 	path, err := env.Path()

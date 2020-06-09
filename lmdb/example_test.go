@@ -359,7 +359,7 @@ func ExampleTxn() {
 	var dbi lmdb.DBI
 	err := env.Update(func(txn *lmdb.Txn) (err error) {
 		dbi, err = txn.OpenDBI("exampledb", lmdb.Create)
-		// the transaction will be commited if the database was successfully
+		// the transaction will be committed if the database was successfully
 		// opened/created.
 		return err
 	})
