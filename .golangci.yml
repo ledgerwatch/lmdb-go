@@ -30,7 +30,6 @@ linters:
     - ineffassign
     - depguard
     - typecheck
-    - unused
     - misspell
 
 linters-settings:
