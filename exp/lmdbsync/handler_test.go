@@ -2,6 +2,7 @@ package lmdbsync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -81,7 +82,7 @@ func TestMapFullHandler(t *testing.T) {
 
 	errother := fmt.Errorf("testerr")
 	ctx1, err := handler.HandleTxnErr(ctx, env, errother)
-	if err != nil {
+	if err != nil && !errors.Is(err, errother) {
 		t.Error(err)
 		return
 	}
@@ -123,8 +124,8 @@ func TestMapResizedHandler(t *testing.T) {
 
 	errother := fmt.Errorf("testerr")
 	_, err = handler.HandleTxnErr(ctx, env, errother)
-	if err != ErrTxnRetry {
-		t.Errorf("unexpected error: %v", err)
+	if err != nil {
+		t.Error(err)
 	}
 
 	errmapresized := &lmdb.OpError{
