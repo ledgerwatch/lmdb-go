@@ -2,6 +2,17 @@ name: Test
 on: [push]
 jobs:
 
+  lint:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.27
+          only-new-issues: true
+
   test:
     strategy:
       matrix:
@@ -20,12 +31,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: go-${{ matrix.os }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
-
-      - name: lint
-        uses: golangci/golangci-lint-action@v1
-        with:
-          version: v1.27
-          only-new-issues: true
 
       - name: Test
         run: make test
