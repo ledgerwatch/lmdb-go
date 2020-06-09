@@ -1,5 +1,5 @@
 
-.PHONY: deps all test full-test bin
+.PHONY: deps all test race bin
 
 BRANCH=`git rev-parse --abbrev-ref HEAD`
 COMMIT=`git rev-parse --short HEAD`
@@ -14,16 +14,13 @@ bin:
 	GOBIN=${PWD}/bin go install ./exp/cmd/...
 	GOBIN=${PWD}/bin go install ./cmd/...
 
-all: deps check full-test bin
+all: deps check race bin
 
 test:
-	go test -cover ./...
-
-full-test: test
-	go test -race ./...
+	go test -cover ./lmdb ./exp/lmdbpool
 
 race:
-	go test -race ./...
+	go test -race ./lmdb ./exp/lmdbpool
 
 lint:
 	golangci-lint run --new-from-rev=$(MASTER_COMMIT) ./...
