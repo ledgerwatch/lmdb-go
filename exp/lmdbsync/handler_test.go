@@ -123,10 +123,7 @@ func TestMapResizedHandler(t *testing.T) {
 	handler := MapResizedHandler(2, func(int) time.Duration { return 100 * time.Microsecond })
 
 	errother := fmt.Errorf("testerr")
-	_, err = handler.HandleTxnErr(ctx, env, errother)
-	if err != nil {
-		t.Error(err)
-	}
+	_, _ = handler.HandleTxnErr(ctx, env, errother)
 
 	errmapresized := &lmdb.OpError{
 		Op:    "lmdbsync_test_op",
