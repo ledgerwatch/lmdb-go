@@ -126,8 +126,8 @@ func WriteRandomItems(path string, numitem, chunksize int64) (err error) {
 				return err
 			}
 
-			for i = start; i < chunkmax; i++ {
-				k := fmt.Sprintf("%06d-%016x", pid, i)
+			for j := start; j < chunkmax; j++ {
+				k := fmt.Sprintf("%06d-%016x", pid, j)
 				err = txn.Put(dbi, []byte(k), v, 0)
 				if err != nil {
 					return err

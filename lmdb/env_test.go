@@ -337,7 +337,7 @@ func TestEnv_ReaderList_error(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected error")
 	}
-	if err != e {
+	if !errors.Is(err, e) {
 		t.Errorf("unexpected error: %q (!= %q)", err, e)
 	}
 	if len(readers) != 1 {

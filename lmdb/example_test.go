@@ -566,6 +566,7 @@ func ExampleCursor_Renew() {
 		defer cur.Close()
 
 		for key := range keys {
+			key := key
 			err := env.View(func(txn *lmdb.Txn) (err error) {
 				err = cur.Renew(txn)
 				if err != nil {
