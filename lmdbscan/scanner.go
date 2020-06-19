@@ -17,12 +17,12 @@ var errClosed = fmt.Errorf("scanner is closed")
 // transaction.
 type Scanner struct {
 	dbi lmdb.DBI
-	cur *lmdb.Cursor
+	set bool
 	op  uint
+	err error
+	cur *lmdb.Cursor
 	key []byte
 	val []byte
-	err error
-	set bool
 }
 
 // New allocates and intializes a Scanner for dbi within txn.  When the Scanner

@@ -113,7 +113,7 @@ func wrapVal(b []byte) *C.MDB_val {
 }
 
 func getBytes(val *C.MDB_val) []byte {
-	return (*[valMaxSize]byte)(unsafe.Pointer(val.mv_data))[:val.mv_size:val.mv_size]
+	return (*[valMaxSize]byte)(val.mv_data)[:val.mv_size:val.mv_size]
 }
 
 func getBytesCopy(val *C.MDB_val) []byte {

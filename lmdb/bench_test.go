@@ -284,6 +284,7 @@ func BenchmarkGet_1_alloc_rw_copy(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.Update(func(txn *Txn) (err error) {
 			err = benchmarkGetBatch(txn, dbi, i, 1, recordSet.Len())
 			if err != nil && !IsNotFound(err) {
@@ -312,6 +313,7 @@ func BenchmarkGet_1_alloc_rw_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.Update(func(txn *Txn) (err error) {
 			txn.RawRead = true
 
@@ -342,6 +344,7 @@ func BenchmarkGet_1_alloc_ro_copy(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.View(func(txn *Txn) (err error) {
 			err = benchmarkGetBatch(txn, dbi, i, 1, recordSet.Len())
 			if err != nil && !IsNotFound(err) {
@@ -370,6 +373,7 @@ func BenchmarkGet_1_alloc_ro_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.View(func(txn *Txn) (err error) {
 			txn.RawRead = true
 
@@ -414,6 +418,7 @@ func BenchmarkGet_1_renew_ro_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err = txn.Renew()
 		if err != nil {
 			b.Error(err)
@@ -443,6 +448,7 @@ func BenchmarkGet_5_alloc_rw_copy(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.Update(func(txn *Txn) (err error) {
 			err = benchmarkGetBatch(txn, dbi, i, 5, recordSet.Len())
 			if err != nil && !IsNotFound(err) {
@@ -471,6 +477,7 @@ func BenchmarkGet_5_alloc_rw_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.Update(func(txn *Txn) (err error) {
 			txn.RawRead = true
 
@@ -501,6 +508,7 @@ func BenchmarkGet_5_alloc_ro_copy(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.View(func(txn *Txn) (err error) {
 			err = benchmarkGetBatch(txn, dbi, i, 5, recordSet.Len())
 			if err != nil && !IsNotFound(err) {
@@ -529,6 +537,7 @@ func BenchmarkGet_5_alloc_ro_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.View(func(txn *Txn) (err error) {
 			txn.RawRead = true
 
@@ -573,6 +582,7 @@ func BenchmarkGet_5_renew_ro_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err = txn.Renew()
 		if err != nil {
 			b.Error(err)
@@ -602,6 +612,7 @@ func BenchmarkGet_25_alloc_rw_copy(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.Update(func(txn *Txn) (err error) {
 			err = benchmarkGetBatch(txn, dbi, i, 25, recordSet.Len())
 			if err != nil && !IsNotFound(err) {
@@ -630,6 +641,7 @@ func BenchmarkGet_25_alloc_rw_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.Update(func(txn *Txn) (err error) {
 			txn.RawRead = true
 
@@ -660,6 +672,7 @@ func BenchmarkGet_25_alloc_ro_copy(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.View(func(txn *Txn) (err error) {
 			err = benchmarkGetBatch(txn, dbi, i, 25, recordSet.Len())
 			if err != nil && !IsNotFound(err) {
@@ -688,6 +701,7 @@ func BenchmarkGet_25_alloc_ro_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err := env.View(func(txn *Txn) (err error) {
 			txn.RawRead = true
 
@@ -732,6 +746,7 @@ func BenchmarkGet_25_renew_ro_raw(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		i := i
 		err = txn.Renew()
 		if err != nil {
 			b.Error(err)
@@ -780,6 +795,7 @@ func BenchmarkScan_10_alloc_rw_copy(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+
 		err := env.Update(func(txn *Txn) (err error) {
 			cur, err := txn.OpenCursor(dbi)
 			if err != nil {

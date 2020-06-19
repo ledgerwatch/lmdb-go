@@ -85,8 +85,6 @@ func main() {
 // Options contains all the configuration for an lmdb_stat command including
 // command line arguments.
 type Options struct {
-	Path string
-
 	PrintInfo         bool
 	PrintReaders      bool
 	PrintReadersCheck bool
@@ -94,9 +92,10 @@ type Options struct {
 	PrintFreeSummary  bool
 	PrintFreeFull     bool
 	PrintStatAll      bool
-	PrintStatSub      string
+	Debug             bool
 
-	Debug bool
+	PrintStatSub string
+	Path         string
 }
 
 func doMain(opt *Options) error {

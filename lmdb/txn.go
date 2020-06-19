@@ -316,7 +316,7 @@ func (txn *Txn) CreateDBI(name string) (DBI, error) {
 // Flags returns the database flags for handle dbi.
 func (txn *Txn) Flags(dbi DBI) (uint, error) {
 	var cflags C.uint
-	ret := C.mdb_dbi_flags(txn._txn, C.MDB_dbi(dbi), (*C.uint)(&cflags))
+	ret := C.mdb_dbi_flags(txn._txn, C.MDB_dbi(dbi), &cflags)
 	return uint(cflags), operrno("mdb_dbi_flags", ret)
 }
 
