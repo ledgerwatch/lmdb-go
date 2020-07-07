@@ -112,7 +112,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AskAlexSharov/lmdb-go/lmdb"
+	"github.com/ledgerwatch/lmdb-go/lmdb"
 )
 
 // Env wraps an *lmdb.Env, receiving all the same methods and proxying some to
