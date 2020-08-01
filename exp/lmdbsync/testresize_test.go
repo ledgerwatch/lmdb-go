@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AskAlexSharov/lmdb-go/lmdb"
+	"github.com/ledgerwatch/lmdb-go/lmdb"
 )
 
 func TestResize(t *testing.T) {

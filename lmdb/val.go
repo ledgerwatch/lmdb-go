@@ -10,7 +10,7 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/AskAlexSharov/lmdb-go/internal/lmdbarch"
+	"github.com/ledgerwatch/lmdb-go/internal/lmdbarch"
 )
 
 // valSizeBits is the number of bits which constraining the length of the

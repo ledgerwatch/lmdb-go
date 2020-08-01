@@ -5,8 +5,8 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/AskAlexSharov/lmdb-go/internal/lmdbtest"
-	"github.com/AskAlexSharov/lmdb-go/lmdb"
+	"github.com/ledgerwatch/lmdb-go/internal/lmdbtest"
+	"github.com/ledgerwatch/lmdb-go/lmdb"
 )
 
 func TestScanner_err(t *testing.T) {

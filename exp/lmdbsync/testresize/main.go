@@ -27,8 +27,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/AskAlexSharov/lmdb-go/exp/lmdbsync"
-	"github.com/AskAlexSharov/lmdb-go/lmdb"
+	"github.com/ledgerwatch/lmdb-go/exp/lmdbsync"
+	"github.com/ledgerwatch/lmdb-go/lmdb"
 )
 
 func main() {
