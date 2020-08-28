@@ -2,6 +2,7 @@ package lmdb
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"reflect"
@@ -254,6 +255,89 @@ func TestCursor_Get_KV(t *testing.T) {
 		}
 
 		_, _, err = cur.Get([]byte("key"), []byte("1"), GetBoth)
+		return err
+	})
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+}
+
+func TestDupSuffix32(t *testing.T) {
+	hash32Str := "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
+	hash32Bytes, err := hex.DecodeString(hash32Str)
+	if err != nil {
+		panic(err)
+	}
+	env := setup(t)
+	defer clean(env, t)
+
+	var dbi DBI
+	err = env.Update(func(txn *Txn) (err error) {
+		dbi, err = txn.OpenDBI("testdb", Create|DupSort)
+		if err != nil {
+			return err
+		}
+		err = txn.SetDupCmpSuffix32(dbi)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	err = env.Update(func(txn *Txn) (err error) {
+		put := func(k, v []byte) {
+			if err == nil {
+				err = txn.Put(dbi, k, v, 0)
+			}
+		}
+		put([]byte{0}, append([]byte{0, 0}, hash32Bytes...))
+		put([]byte{0}, append([]byte{0}, hash32Bytes...))
+		put([]byte{0}, hash32Bytes)
+		return err
+	})
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	err = env.View(func(txn *Txn) (err error) {
+		cur, err := txn.OpenCursor(dbi)
+		if err != nil {
+			return err
+		}
+		defer cur.Close()
+		_, v, err := cur.Get([]byte{0}, nil, First)
+		if err != nil {
+			return err
+		}
+
+		_, v, err = cur.Get(nil, nil, FirstDup)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(v, hash32Bytes) {
+			t.Errorf("unexpected order: %x (not %x)", v, hash32Bytes)
+		}
+
+		_, v, err = cur.Get(nil, nil, NextDup)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(v, append([]byte{0}, hash32Bytes...)) {
+			t.Errorf("unexpected order: %x (not %x)", v, append([]byte{0}, hash32Bytes...))
+		}
+
+		_, v, err = cur.Get(nil, nil, NextDup)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(v, append([]byte{0, 0}, hash32Bytes...)) {
+			t.Errorf("unexpected order: %x (not %x)", v, append([]byte{0, 0}, hash32Bytes...))
+		}
+
 		return err
 	})
 	if err != nil {
