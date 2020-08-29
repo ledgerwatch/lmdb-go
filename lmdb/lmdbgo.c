@@ -4,6 +4,7 @@
 #include "lmdb.h"
 #include "lmdbgo.h"
 #include "_cgo_export.h"
+#include <string.h>
 
 #define LMDBGO_SET_VAL(val, size, data) \
     *(val) = (MDB_val){.mv_size = (size), .mv_data = (data)}
@@ -80,3 +81,24 @@ int lmdbgo_mdb_cursor_get2(MDB_cursor *cur, char *kdata, size_t kn, char *vdata,
     LMDBGO_SET_VAL(val, vn, vdata);
     return mdb_cursor_get(cur, key, val, op);
 }
+
+static int dup_cmp_exclude_suffix32(const MDB_val *a, const MDB_val *b) {
+	int diff;
+	ssize_t len_diff;
+	unsigned int len;
+
+	len = a->mv_size - 32;
+	len_diff = (ssize_t) a->mv_size - (ssize_t) b->mv_size;
+	if (len_diff > 0) {
+		len = b->mv_size - 32;
+		len_diff = 1;
+	}
+
+	diff = memcmp(a->mv_data, b->mv_data, len);
+	return diff ? diff : len_diff<0 ? -1 : len_diff;
+}
+
+int lmdbgo_set_dupsort_cmp_exclude_suffix32(MDB_txn *txn, MDB_dbi dbi) {
+    return mdb_set_dupsort(txn, dbi, dup_cmp_exclude_suffix32);
+}
+

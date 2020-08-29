@@ -39,4 +39,8 @@ typedef struct{ const char *p; } lmdbgo_ConstCString;
  * */
 int lmdbgo_mdb_reader_list(MDB_env *env, size_t ctx);
 
+
+int lmdbgo_set_dupsort_cmp_exclude_suffix32(MDB_txn *txn, MDB_dbi dbi);
+
+
 #endif
