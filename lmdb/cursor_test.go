@@ -310,12 +310,12 @@ func TestDupSuffix32(t *testing.T) {
 			return err
 		}
 		defer cur.Close()
-		_, v, err := cur.Get([]byte{0}, nil, First)
+		_, _, err = cur.Get([]byte{0}, nil, First)
 		if err != nil {
 			return err
 		}
 
-		_, v, err = cur.Get(nil, nil, FirstDup)
+		_, v, err := cur.Get(nil, nil, FirstDup)
 		if err != nil {
 			return err
 		}
