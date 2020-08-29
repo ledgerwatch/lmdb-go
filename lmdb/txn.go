@@ -531,11 +531,11 @@ func (txn *Txn) finalize() {
 // through closure).  Doing so has undefined results.
 type TxnOp func(txn *Txn) error
 
-func (txn *Txn) SetDupCmpSuffix32(dbi DBI) error {
-	ret := C.lmdbgo_set_dupsort_suffix32(
+func (txn *Txn) SetDupCmpExcludeSuffix32(dbi DBI) error {
+	ret := C.lmdbgo_set_dupsort_cmp_exclude_suffix32(
 		txn._txn, C.MDB_dbi(dbi),
 	)
-	err := operrno("lmdbgo_set_dupsort_suffix32", ret)
+	err := operrno("lmdbgo_set_dupsort_cmp_exclude_suffix32", ret)
 	if err != nil {
 		return err
 	}

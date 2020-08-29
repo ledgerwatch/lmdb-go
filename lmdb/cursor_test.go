@@ -277,7 +277,7 @@ func TestDupSuffix32(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		err = txn.SetDupCmpSuffix32(dbi)
+		err = txn.SetDupCmpExcludeSuffix32(dbi)
 		if err != nil {
 			return err
 		}
@@ -294,6 +294,7 @@ func TestDupSuffix32(t *testing.T) {
 				err = txn.Put(dbi, k, v, 0)
 			}
 		}
+		put([]byte{1}, hash32Bytes)
 		put([]byte{0}, append([]byte{0, 0}, hash32Bytes...))
 		put([]byte{0}, append([]byte{0}, hash32Bytes...))
 		put([]byte{0}, hash32Bytes)
@@ -336,6 +337,17 @@ func TestDupSuffix32(t *testing.T) {
 		}
 		if !bytes.Equal(v, append([]byte{0, 0}, hash32Bytes...)) {
 			t.Errorf("unexpected order: %x (not %x)", v, append([]byte{0, 0}, hash32Bytes...))
+		}
+
+		k, v, err := cur.Get(nil, nil, Next)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(k, []byte{1}) {
+			t.Errorf("unexpected order: %x (not %x)", k, []byte{1})
+		}
+		if !bytes.Equal(v, hash32Bytes) {
+			t.Errorf("unexpected order: %x (not %x)", v, hash32Bytes)
 		}
 
 		return err

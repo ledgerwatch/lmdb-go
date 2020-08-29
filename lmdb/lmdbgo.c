@@ -82,7 +82,7 @@ int lmdbgo_mdb_cursor_get2(MDB_cursor *cur, char *kdata, size_t kn, char *vdata,
     return mdb_cursor_get(cur, key, val, op);
 }
 
-static int dup_cmp_suffix32(const MDB_val *a, const MDB_val *b) {
+static int dup_cmp_exclude_suffix32(const MDB_val *a, const MDB_val *b) {
 	int diff;
 	ssize_t len_diff;
 	unsigned int len;
@@ -98,7 +98,7 @@ static int dup_cmp_suffix32(const MDB_val *a, const MDB_val *b) {
 	return diff ? diff : len_diff<0 ? -1 : len_diff;
 }
 
-int lmdbgo_set_dupsort_suffix32(MDB_txn *txn, MDB_dbi dbi) {
-    return mdb_set_dupsort(txn, dbi, dup_cmp_suffix32);
+int lmdbgo_set_dupsort_cmp_exclude_suffix32(MDB_txn *txn, MDB_dbi dbi) {
+    return mdb_set_dupsort(txn, dbi, dup_cmp_exclude_suffix32);
 }
 
