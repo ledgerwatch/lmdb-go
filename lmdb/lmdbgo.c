@@ -106,3 +106,18 @@ int lmdbgo_set_dupsort_cmp_exclude_suffix32(MDB_txn *txn, MDB_dbi dbi) {
     return mdb_set_dupsort(txn, dbi, dup_cmp_exclude_suffix32);
 }
 
+int lmdbgo_cmp(MDB_txn *txn, MDB_dbi dbi, char *adata, size_t an, char *bdata, size_t bn) {
+    MDB_val a;
+    LMDBGO_SET_VAL(&a, an, adata);
+    MDB_val b;
+    LMDBGO_SET_VAL(&b, bn, bdata);
+    return mdb_cmp(txn, dbi, &a, &b);
+}
+
+int lmdbgo_dcmp(MDB_txn *txn, MDB_dbi dbi, char *adata, size_t an, char *bdata, size_t bn) {
+    MDB_val a;
+    LMDBGO_SET_VAL(&a, an, adata);
+    MDB_val b;
+    LMDBGO_SET_VAL(&b, bn, bdata);
+    return mdb_dcmp(txn, dbi, &a, &b);
+}

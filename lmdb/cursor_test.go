@@ -262,17 +262,20 @@ func TestCursor_Get_KV(t *testing.T) {
 	}
 }
 
-func TestDupSuffix32(t *testing.T) {
-	hash32Str := "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
-	hash32Bytes, err := hex.DecodeString(hash32Str)
+func FromHex(in string) []byte {
+	out, err := hex.DecodeString(in)
 	if err != nil {
 		panic(err)
 	}
+	return out
+}
+func TestDupSuffix32(t *testing.T) {
+	hash32Bytes := FromHex("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
 	env := setup(t)
 	defer clean(env, t)
 
 	var dbi DBI
-	err = env.Update(func(txn *Txn) (err error) {
+	err := env.Update(func(txn *Txn) (err error) {
 		dbi, err = txn.OpenDBI("testdb", Create|DupSort)
 		if err != nil {
 			return err
@@ -309,6 +312,7 @@ func TestDupSuffix32(t *testing.T) {
 		if err != nil {
 			return err
 		}
+
 		defer cur.Close()
 		_, _, err = cur.Get([]byte{0}, nil, First)
 		if err != nil {

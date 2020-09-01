@@ -541,3 +541,45 @@ func (txn *Txn) SetDupCmpExcludeSuffix32(dbi DBI) error {
 	}
 	return nil
 }
+
+func (txn *Txn) Cmp(dbi DBI, a []byte, b []byte) (int, error) {
+	adata, an := valBytes(a)
+	bdata, bn := valBytes(b)
+	ret := C.lmdbgo_cmp(
+		txn._txn, C.MDB_dbi(dbi),
+		(*C.char)(unsafe.Pointer(&adata[0])), C.size_t(an),
+		(*C.char)(unsafe.Pointer(&bdata[0])), C.size_t(bn),
+	)
+	if ret == 1 {
+		return 1, nil
+	}
+	if ret == 0 {
+		return 0, nil
+	}
+	if ret == -1 {
+		return -1, nil
+	}
+
+	return 0, operrno("lmdbgo_cmp", ret)
+}
+
+func (txn *Txn) DCmp(dbi DBI, a []byte, b []byte) (int, error) {
+	adata, an := valBytes(a)
+	bdata, bn := valBytes(b)
+	ret := C.lmdbgo_dcmp(
+		txn._txn, C.MDB_dbi(dbi),
+		(*C.char)(unsafe.Pointer(&adata[0])), C.size_t(an),
+		(*C.char)(unsafe.Pointer(&bdata[0])), C.size_t(bn),
+	)
+	if ret == 1 {
+		return 1, nil
+	}
+	if ret == 0 {
+		return 0, nil
+	}
+	if ret == -1 {
+		return -1, nil
+	}
+
+	return 0, operrno("lmdbgo_dcmp", ret)
+}

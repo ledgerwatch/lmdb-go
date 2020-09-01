@@ -41,6 +41,7 @@ int lmdbgo_mdb_reader_list(MDB_env *env, size_t ctx);
 
 
 int lmdbgo_set_dupsort_cmp_exclude_suffix32(MDB_txn *txn, MDB_dbi dbi);
-
+int lmdbgo_cmp(MDB_txn *txn, MDB_dbi dbi, char *adata, size_t an, char *bdata, size_t bn);
+int lmdbgo_dcmp(MDB_txn *txn, MDB_dbi dbi, char *adata, size_t an, char *bdata, size_t bn);
 
 #endif
