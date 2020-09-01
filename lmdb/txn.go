@@ -542,44 +542,38 @@ func (txn *Txn) SetDupCmpExcludeSuffix32(dbi DBI) error {
 	return nil
 }
 
-func (txn *Txn) Cmp(dbi DBI, a []byte, b []byte) (int, error) {
+// Cmp - this func follow bytes.Compare return style: The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
+func (txn *Txn) Cmp(dbi DBI, a []byte, b []byte) int {
 	adata, an := valBytes(a)
 	bdata, bn := valBytes(b)
-	ret := C.lmdbgo_cmp(
+	ret := int(C.lmdbgo_cmp(
 		txn._txn, C.MDB_dbi(dbi),
 		(*C.char)(unsafe.Pointer(&adata[0])), C.size_t(an),
 		(*C.char)(unsafe.Pointer(&bdata[0])), C.size_t(bn),
-	)
-	if ret == 1 {
-		return 1, nil
+	))
+	if ret > 0 {
+		return 1
 	}
-	if ret == 0 {
-		return 0, nil
+	if ret < 0 {
+		return -1
 	}
-	if ret == -1 {
-		return -1, nil
-	}
-
-	return 0, operrno("lmdbgo_cmp", ret)
+	return 0
 }
 
-func (txn *Txn) DCmp(dbi DBI, a []byte, b []byte) (int, error) {
+// DCmp - this func follow bytes.Compare return style: The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
+func (txn *Txn) DCmp(dbi DBI, a []byte, b []byte) int {
 	adata, an := valBytes(a)
 	bdata, bn := valBytes(b)
-	ret := C.lmdbgo_dcmp(
+	ret := int(C.lmdbgo_dcmp(
 		txn._txn, C.MDB_dbi(dbi),
 		(*C.char)(unsafe.Pointer(&adata[0])), C.size_t(an),
 		(*C.char)(unsafe.Pointer(&bdata[0])), C.size_t(bn),
-	)
-	if ret == 1 {
-		return 1, nil
+	))
+	if ret > 0 {
+		return 1
 	}
-	if ret == 0 {
-		return 0, nil
+	if ret < 0 {
+		return -1
 	}
-	if ret == -1 {
-		return -1, nil
-	}
-
-	return 0, operrno("lmdbgo_dcmp", ret)
+	return 0
 }
