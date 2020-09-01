@@ -86,11 +86,15 @@ static int dup_cmp_exclude_suffix32(const MDB_val *a, const MDB_val *b) {
 	int diff;
 	ssize_t len_diff;
 	unsigned int len;
+	unsigned int lenA;
+	unsigned int lenB;
 
-	len = a->mv_size - 32;
-	len_diff = (ssize_t) a->mv_size - (ssize_t) b->mv_size;
+    lenA = a->mv_size >= 32 ? a->mv_size - 32 : a->mv_size;
+	lenB = b->mv_size >= 32 ? b->mv_size - 32 : b->mv_size;
+    len = lenA;
+	len_diff = (ssize_t) lenA - (ssize_t) lenB;
 	if (len_diff > 0) {
-		len = b->mv_size - 32;
+		len = lenB;
 		len_diff = 1;
 	}
 
