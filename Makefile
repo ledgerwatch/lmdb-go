@@ -23,11 +23,11 @@ race:
 	go test -race ./lmdb ./exp/lmdbpool
 
 lint:
-	golangci-lint run --new-from-rev=$(MASTER_COMMIT) ./...
+	./build/bin/golangci-lint run --new-from-rev=$(MASTER_COMMIT) ./...
 
 lintci-deps:
 	rm -f ./build/bin/golangci-lint
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ./build/bin v1.27.0
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ./build/bin v1.30.0
 
 check:
 	which goimports > /dev/null

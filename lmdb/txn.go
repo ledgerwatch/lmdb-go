@@ -541,3 +541,39 @@ func (txn *Txn) SetDupCmpExcludeSuffix32(dbi DBI) error {
 	}
 	return nil
 }
+
+// Cmp - this func follow bytes.Compare return style: The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
+func (txn *Txn) Cmp(dbi DBI, a []byte, b []byte) int {
+	adata, an := valBytes(a)
+	bdata, bn := valBytes(b)
+	ret := int(C.lmdbgo_cmp(
+		txn._txn, C.MDB_dbi(dbi),
+		(*C.char)(unsafe.Pointer(&adata[0])), C.size_t(an),
+		(*C.char)(unsafe.Pointer(&bdata[0])), C.size_t(bn),
+	))
+	if ret > 0 {
+		return 1
+	}
+	if ret < 0 {
+		return -1
+	}
+	return 0
+}
+
+// DCmp - this func follow bytes.Compare return style: The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
+func (txn *Txn) DCmp(dbi DBI, a []byte, b []byte) int {
+	adata, an := valBytes(a)
+	bdata, bn := valBytes(b)
+	ret := int(C.lmdbgo_dcmp(
+		txn._txn, C.MDB_dbi(dbi),
+		(*C.char)(unsafe.Pointer(&adata[0])), C.size_t(an),
+		(*C.char)(unsafe.Pointer(&bdata[0])), C.size_t(bn),
+	))
+	if ret > 0 {
+		return 1
+	}
+	if ret < 0 {
+		return -1
+	}
+	return 0
+}

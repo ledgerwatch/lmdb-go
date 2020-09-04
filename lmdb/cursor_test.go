@@ -262,17 +262,21 @@ func TestCursor_Get_KV(t *testing.T) {
 	}
 }
 
-func TestDupSuffix32(t *testing.T) {
-	hash32Str := "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
-	hash32Bytes, err := hex.DecodeString(hash32Str)
+func FromHex(in string) []byte {
+	out, err := hex.DecodeString(in)
 	if err != nil {
 		panic(err)
 	}
+	return out
+}
+
+func TestDupCmpExcludeSuffix32(t *testing.T) {
+	hash32Bytes := FromHex("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
 	env := setup(t)
 	defer clean(env, t)
 
 	var dbi DBI
-	err = env.Update(func(txn *Txn) (err error) {
+	err := env.Update(func(txn *Txn) (err error) {
 		dbi, err = txn.OpenDBI("testdb", Create|DupSort)
 		if err != nil {
 			return err
@@ -281,6 +285,17 @@ func TestDupSuffix32(t *testing.T) {
 		if err != nil {
 			return err
 		}
+
+		if txn.DCmp(dbi, []byte{0}, append([]byte{0}, hash32Bytes...)) != 0 {
+			t.Errorf("broken order")
+		}
+		if txn.DCmp(dbi, []byte{0, 0}, append([]byte{0}, hash32Bytes...)) != 1 {
+			t.Errorf("broken order")
+		}
+		if txn.DCmp(dbi, hash32Bytes, append([]byte{0}, hash32Bytes...)) != -1 {
+			t.Errorf("broken order")
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -298,6 +313,7 @@ func TestDupSuffix32(t *testing.T) {
 		put([]byte{0}, append([]byte{0, 0}, hash32Bytes...))
 		put([]byte{0}, append([]byte{0}, hash32Bytes...))
 		put([]byte{0}, hash32Bytes)
+
 		return err
 	})
 	if err != nil {
@@ -309,6 +325,7 @@ func TestDupSuffix32(t *testing.T) {
 		if err != nil {
 			return err
 		}
+
 		defer cur.Close()
 		_, _, err = cur.Get([]byte{0}, nil, First)
 		if err != nil {
@@ -330,7 +347,6 @@ func TestDupSuffix32(t *testing.T) {
 		if !bytes.Equal(v, append([]byte{0}, hash32Bytes...)) {
 			t.Errorf("unexpected order: %x (not %x)", v, append([]byte{0}, hash32Bytes...))
 		}
-
 		_, v, err = cur.Get(nil, nil, NextDup)
 		if err != nil {
 			return err
@@ -345,6 +361,27 @@ func TestDupSuffix32(t *testing.T) {
 		}
 		if !bytes.Equal(k, []byte{1}) {
 			t.Errorf("unexpected order: %x (not %x)", k, []byte{1})
+		}
+		if !bytes.Equal(v, hash32Bytes) {
+			t.Errorf("unexpected order: %x (not %x)", v, hash32Bytes)
+		}
+
+		k, _, err = cur.Get([]byte{0}, []byte{40}, GetBothRange)
+		if !IsNotFound(err) {
+			t.Errorf("unexpected error: %v (key %x)", err, k)
+		}
+
+		_, v, err = cur.Get([]byte{0}, []byte{0}, GetBothRange)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(v, append([]byte{0}, hash32Bytes...)) {
+			t.Errorf("unexpected order: %x (not %x)", v, append([]byte{0}, hash32Bytes...))
+		}
+
+		_, v, err = cur.Get([]byte{0}, nil, SetRange)
+		if err != nil {
+			return err
 		}
 		if !bytes.Equal(v, hash32Bytes) {
 			t.Errorf("unexpected order: %x (not %x)", v, hash32Bytes)
