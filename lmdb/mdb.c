@@ -3610,7 +3610,6 @@ mdb_txn_commit(MDB_txn *txn)
 
 	fprintf(stderr, "%p commit - before mdb_cursor_close\n", env);
 	mdb_cursors_close(txn, 0);
-	fprintf(stderr, "%p commit - after mdb_cursor_close\n", env);
 
 	if (!txn->mt_u.dirty_list[0].mid &&
 		!(txn->mt_flags & (MDB_TXN_DIRTY|MDB_TXN_SPILLS)))
@@ -3642,18 +3641,22 @@ mdb_txn_commit(MDB_txn *txn)
 		}
 	}
 
+    fprintf(stderr, "%p commit - before mdb_freelist_save\n", env);
 	rc = mdb_freelist_save(txn);
 	if (rc)
 		goto fail;
 
+	fprintf(stderr, "%p commit - before mdb_midl_free\n", env);
 	mdb_midl_free(env->me_pghead);
 	env->me_pghead = NULL;
+	fprintf(stderr, "%p commit - before mdb_midl_shrink\n", env);
 	mdb_midl_shrink(&txn->mt_free_pgs);
 
 #if (MDB_DEBUG) > 2
 	mdb_audit(txn);
 #endif
 
+	fprintf(stderr, "%p commit - before mdb_page_flush\n", env);
 	if ((rc = mdb_page_flush(txn, 0)) ||
 		(rc = mdb_env_sync(env, 0)) ||
 		(rc = mdb_env_write_meta(txn)))
@@ -3661,7 +3664,9 @@ mdb_txn_commit(MDB_txn *txn)
 	end_mode = MDB_END_COMMITTED|MDB_END_UPDATE;
 
 done:
+	fprintf(stderr, "%p commit - before mdb_txn_end\n", env);
 	mdb_txn_end(txn, end_mode);
+	fprintf(stderr, "%p commit - after mdb_txn_end\n", env);
 	return MDB_SUCCESS;
 
 fail:
