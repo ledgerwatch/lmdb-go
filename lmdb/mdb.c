@@ -3181,6 +3181,8 @@ mdb_freelist_save(MDB_txn *txn)
 			key.mv_data = &txn->mt_txnid;
 			do {
 				freecnt = free_pgs[0];
+				gettimeofday(&curtime, &curzone);
+				fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - freecnt=%lu\n", env, curtime.tv_sec, curtime.tv_usec, freecnt);				
 				data.mv_size = MDB_IDL_SIZEOF(free_pgs);
 				rc = mdb_cursor_put(&mc, &key, &data, MDB_RESERVE);
 				if (rc)
