@@ -3608,7 +3608,9 @@ mdb_txn_commit(MDB_txn *txn)
 		goto fail;
 	}
 
+	fprintf(stderr, "commit - before mdb_cursor_close\n");
 	mdb_cursors_close(txn, 0);
+	fprintf(stderr, "commit - after mdb_cursor_close\n");
 
 	if (!txn->mt_u.dirty_list[0].mid &&
 		!(txn->mt_flags & (MDB_TXN_DIRTY|MDB_TXN_SPILLS)))
