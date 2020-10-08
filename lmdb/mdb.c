@@ -3646,16 +3646,16 @@ mdb_txn_commit(MDB_txn *txn)
 	}
 
 	gettimeofday(&curtime, &curzone);
-    fprintf(stderr, "%p commit - before mdb_freelist_save\n", env, curtime.tv_sec, curtime.tv_usec);
+    fprintf(stderr, "%p [%ld:%d] commit - before mdb_freelist_save\n", env, curtime.tv_sec, curtime.tv_usec);
 	rc = mdb_freelist_save(txn);
 	if (rc)
 		goto fail;
 	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p commit - before mdb_midl_free\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] commit - before mdb_midl_free\n", env, curtime.tv_sec, curtime.tv_usec);
 	mdb_midl_free(env->me_pghead);
 	env->me_pghead = NULL;
 	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p commit - before mdb_midl_shrink\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] commit - before mdb_midl_shrink\n", env, curtime.tv_sec, curtime.tv_usec);
 	mdb_midl_shrink(&txn->mt_free_pgs);
 
 #if (MDB_DEBUG) > 2
@@ -3663,7 +3663,7 @@ mdb_txn_commit(MDB_txn *txn)
 #endif
 
 	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p commit - before mdb_page_flush\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] commit - before mdb_page_flush\n", env, curtime.tv_sec, curtime.tv_usec);
 	if ((rc = mdb_page_flush(txn, 0)) ||
 		(rc = mdb_env_sync(env, 0)) ||
 		(rc = mdb_env_write_meta(txn)))
@@ -3672,10 +3672,10 @@ mdb_txn_commit(MDB_txn *txn)
 
 done:
 	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p commit - before mdb_txn_end\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] commit - before mdb_txn_end\n", env, curtime.tv_sec, curtime.tv_usec);
 	mdb_txn_end(txn, end_mode);
 	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p commit - after mdb_txn_end\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] commit - after mdb_txn_end\n", env, curtime.tv_sec, curtime.tv_usec);
 	return MDB_SUCCESS;
 
 fail:
