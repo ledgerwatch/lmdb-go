@@ -3082,6 +3082,10 @@ mdb_freelist_save(MDB_txn *txn)
 	ssize_t	head_room = 0, total_room = 0, mop_len, clean_limit;
 
 	mdb_cursor_init(&mc, txn, FREE_DBI, NULL);
+	struct timeval curtime;
+	struct timezone curzone;
+	gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - after mdb_cursor_init\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	if (env->me_pghead) {
 		/* Make sure first page of freeDB is touched and on freelist */
@@ -3138,6 +3142,8 @@ mdb_freelist_save(MDB_txn *txn)
 	clean_limit = (env->me_flags & (MDB_NOMEMINIT|MDB_WRITEMAP))
 		? SSIZE_MAX : maxfree_1pg;
 
+	gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - before the main loop\n", env, curtime.tv_sec, curtime.tv_usec);
 	for (;;) {
 		/* Come back here after each Put() in case freelist changed */
 		MDB_val key, data;
@@ -3158,6 +3164,8 @@ mdb_freelist_save(MDB_txn *txn)
 			if (rc)
 				return rc;
 		}
+		gettimeofday(&curtime, &curzone);
+		fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - after del subloop\n", env, curtime.tv_sec, curtime.tv_usec);
 
 		/* Save the IDL of pages freed by this txn, to a single record */
 		if (freecnt < txn->mt_free_pgs[0]) {
@@ -3180,8 +3188,12 @@ mdb_freelist_save(MDB_txn *txn)
 				/* Retry if mt_free_pgs[] grew during the Put() */
 				free_pgs = txn->mt_free_pgs;
 			} while (freecnt < free_pgs[0]);
+			gettimeofday(&curtime, &curzone);
+			fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - after put subloop\n", env, curtime.tv_sec, curtime.tv_usec);
 			mdb_midl_sort(free_pgs);
 			memcpy(data.mv_data, free_pgs, data.mv_size);
+			gettimeofday(&curtime, &curzone);
+			fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - after mdb_midl_sort and memcpy\n", env, curtime.tv_sec, curtime.tv_usec);
 #if (MDB_DEBUG) > 1
 			{
 				unsigned int i = free_pgs[0];
@@ -3233,6 +3245,8 @@ mdb_freelist_save(MDB_txn *txn)
 			pgs[j] = 0;
 		} while (--j >= 0);
 		total_room += head_room;
+		gettimeofday(&curtime, &curzone);
+		fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - end of iterator of main loop\n", env, curtime.tv_sec, curtime.tv_usec);
 	}
 
 	/* Return loose page numbers to me_pghead, though usually none are
