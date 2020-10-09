@@ -2168,6 +2168,9 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 	MDB_cursor m2;
 	int found_old = 0;
 
+	if (num > 16) {
+		goto no_search;
+	}
 	/* If there are any loose pages, just use them */
 	if (num == 1 && txn->mt_loose_pgs) {
 		np = txn->mt_loose_pgs;
@@ -2278,6 +2281,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 		mop_len = mop[0];
 	}
 
+no_search:
 	/* Use new pages from the map when nothing suitable in the freeDB */
 	i = 0;
 	pgno = txn->mt_next_pgno;
