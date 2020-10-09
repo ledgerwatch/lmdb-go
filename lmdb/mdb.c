@@ -7349,10 +7349,11 @@ mdb_node_add(MDB_cursor *mc, indx_t indx,
 
 	mdb_cassert(mc, mp->mp_upper >= mp->mp_lower);
 
+	MDB_env* env = mc->mc_txn->mt_env;
     struct timeval curtime;
 	struct timezone curzone;
 	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "[%ld:%d] mdb_node_add - start\n", curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - start\n", env, curtime.tv_sec, curtime.tv_usec);
 
 
 	DPRINTF(("add to %s %spage %"Z"u index %i, data size %"Z"u key size %"Z"u [%s]",
@@ -7408,7 +7409,7 @@ mdb_node_add(MDB_cursor *mc, indx_t indx,
 		goto full;
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "[%ld:%d] mdb_node_add - before loop\n", curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - before loop\n", env, curtime.tv_sec, curtime.tv_usec);
 
 update:
 	/* Move higher pointers up one slot. */
@@ -7416,7 +7417,7 @@ update:
 		mp->mp_ptrs[i] = mp->mp_ptrs[i - 1];
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "[%ld:%d] mdb_node_add - after loop\n", curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - after loop\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	/* Adjust free space offsets. */
 	ofs = mp->mp_upper - node_size;
@@ -7426,7 +7427,7 @@ update:
 	mp->mp_lower += sizeof(indx_t);
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "[%ld:%d] mdb_node_add - after 'Adjust free space offsets'\n", curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - after 'Adjust free space offsets'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 
 	/* Write the node data. */
@@ -7439,7 +7440,7 @@ update:
 		SETPGNO(node,pgno);
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "[%ld:%d] mdb_node_add - after 'Write the node data'\n", curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - after 'Write the node data'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	if (key)
 		memcpy(NODEKEY(node), key->mv_data, key->mv_size);
@@ -7448,7 +7449,7 @@ update:
 		ndata = NODEDATA(node);
 		if (ofp == NULL) {
 		    gettimeofday(&curtime, &curzone);
-        	fprintf(stderr, "[%ld:%d] mdb_node_add - start 'if (ofp == NULL)'\n", curtime.tv_sec, curtime.tv_usec);
+        	fprintf(stderr, "%p [%ld:%d] mdb_node_add - start 'if (ofp == NULL)'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 			if (F_ISSET(flags, F_BIGDATA))
 				memcpy(ndata, data->mv_data, sizeof(pgno_t));
@@ -7458,10 +7459,10 @@ update:
 				memcpy(ndata, data->mv_data, data->mv_size);
 
             gettimeofday(&curtime, &curzone);
-            fprintf(stderr, "[%ld:%d] mdb_node_add - end 'if (ofp == NULL)'\n", curtime.tv_sec, curtime.tv_usec);
+            fprintf(stderr, "%p [%ld:%d] mdb_node_add - end 'if (ofp == NULL)'\n", env, curtime.tv_sec, curtime.tv_usec);
 		} else {
             gettimeofday(&curtime, &curzone);
-            fprintf(stderr, "[%ld:%d] mdb_node_add - start 'if (ofp == NULL) else'\n", curtime.tv_sec, curtime.tv_usec);
+            fprintf(stderr, "%p [%ld:%d] mdb_node_add - start 'if (ofp == NULL) else'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 			memcpy(ndata, &ofp->mp_pgno, sizeof(pgno_t));
 			ndata = METADATA(ofp);
@@ -7471,12 +7472,12 @@ update:
 				memcpy(ndata, data->mv_data, data->mv_size);
 
             gettimeofday(&curtime, &curzone);
-            fprintf(stderr, "[%ld:%d] mdb_node_add - end 'if (ofp == NULL) else'\n", curtime.tv_sec, curtime.tv_usec);
+            fprintf(stderr, "%p [%ld:%d] mdb_node_add - end 'if (ofp == NULL) else'\n", env, curtime.tv_sec, curtime.tv_usec);
 		}
 	}
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "[%ld:%d] mdb_node_add - end\n", curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - end\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	return MDB_SUCCESS;
 
