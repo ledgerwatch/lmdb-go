@@ -7269,8 +7269,19 @@ mdb_page_new(MDB_cursor *mc, uint32_t flags, int num, MDB_page **mp)
 	MDB_page	*np;
 	int rc;
 
+	MDB_env* env = mc->mc_txn->mt_env;
+    struct timeval curtime;
+	struct timezone curzone;
+	if (flags&P_OVERFLOW) {
+		gettimeofday(&curtime, &curzone);
+		fprintf(stderr, "%p [%ld:%d] mdb_page_new - start\n", env, curtime.tv_sec, curtime.tv_usec);
+	}
 	if ((rc = mdb_page_alloc(mc, num, &np)))
 		return rc;
+	if (flags&P_OVERFLOW) {
+		gettimeofday(&curtime, &curzone);
+		fprintf(stderr, "%p [%ld:%d] mdb_page_new - after allocation\n", env, curtime.tv_sec, curtime.tv_usec);
+	}
 	DPRINTF(("allocated new mpage %"Z"u, page size %u",
 	    np->mp_pgno, mc->mc_txn->mt_env->me_psize));
 	np->mp_flags = flags | P_DIRTY;
