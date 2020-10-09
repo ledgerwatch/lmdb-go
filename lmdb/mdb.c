@@ -7447,19 +7447,31 @@ update:
     if (IS_LEAF(mp)) {
 		ndata = NODEDATA(node);
 		if (ofp == NULL) {
+		    gettimeofday(&curtime, &curzone);
+        	fprintf(stderr, "[%ld:%d] mdb_node_add - start 'if (ofp == NULL)'\n", curtime.tv_sec, curtime.tv_usec);
+
 			if (F_ISSET(flags, F_BIGDATA))
 				memcpy(ndata, data->mv_data, sizeof(pgno_t));
 			else if (F_ISSET(flags, MDB_RESERVE))
 				data->mv_data = ndata;
 			else
 				memcpy(ndata, data->mv_data, data->mv_size);
+
+            gettimeofday(&curtime, &curzone);
+            fprintf(stderr, "[%ld:%d] mdb_node_add - end 'if (ofp == NULL)'\n", curtime.tv_sec, curtime.tv_usec);
 		} else {
+            gettimeofday(&curtime, &curzone);
+            fprintf(stderr, "[%ld:%d] mdb_node_add - start 'if (ofp == NULL) else'\n", curtime.tv_sec, curtime.tv_usec);
+
 			memcpy(ndata, &ofp->mp_pgno, sizeof(pgno_t));
 			ndata = METADATA(ofp);
 			if (F_ISSET(flags, MDB_RESERVE))
 				data->mv_data = ndata;
 			else
 				memcpy(ndata, data->mv_data, data->mv_size);
+
+            gettimeofday(&curtime, &curzone);
+            fprintf(stderr, "[%ld:%d] mdb_node_add - end 'if (ofp == NULL) else'\n", curtime.tv_sec, curtime.tv_usec);
 		}
 	}
 
