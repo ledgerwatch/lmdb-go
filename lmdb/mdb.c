@@ -7352,7 +7352,7 @@ mdb_node_add(MDB_cursor *mc, indx_t indx,
     struct timeval curtime;
 	struct timezone curzone;
 	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] mdb_node_add - start\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "[%ld:%d] mdb_node_add - start\n", curtime.tv_sec, curtime.tv_usec);
 
 
 	DPRINTF(("add to %s %spage %"Z"u index %i, data size %"Z"u key size %"Z"u [%s]",
@@ -7408,7 +7408,7 @@ mdb_node_add(MDB_cursor *mc, indx_t indx,
 		goto full;
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] mdb_node_add - before loop\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "[%ld:%d] mdb_node_add - before loop\n", curtime.tv_sec, curtime.tv_usec);
 
 update:
 	/* Move higher pointers up one slot. */
@@ -7416,7 +7416,7 @@ update:
 		mp->mp_ptrs[i] = mp->mp_ptrs[i - 1];
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] mdb_node_add - after loop\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "[%ld:%d] mdb_node_add - after loop\n", curtime.tv_sec, curtime.tv_usec);
 
 	/* Adjust free space offsets. */
 	ofs = mp->mp_upper - node_size;
@@ -7457,7 +7457,7 @@ update:
 	}
 
     gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] mdb_node_add - end\n", env, curtime.tv_sec, curtime.tv_usec);
+	fprintf(stderr, "[%ld:%d] mdb_node_add - end\n", curtime.tv_sec, curtime.tv_usec);
 
 	return MDB_SUCCESS;
 
