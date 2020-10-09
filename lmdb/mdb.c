@@ -2174,6 +2174,9 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
     struct timeval curtime;
 	struct timezone curzone;
 
+	if (num > 16) {
+		goto no_search;
+	}
 	/* If there are any loose pages, just use them */
 	if (num == 1 && txn->mt_loose_pgs) {
 		np = txn->mt_loose_pgs;
@@ -2290,6 +2293,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 		mop_len = mop[0];
 	}
 
+no_search:
 	/* Use new pages from the map when nothing suitable in the freeDB */
 	i = 0;
 	pgno = txn->mt_next_pgno;
@@ -7026,7 +7030,7 @@ new_sub:
 			gettimeofday(&curtime, &curzone);
         	fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - before mdb_node_add\n", env, curtime.tv_sec, curtime.tv_usec);
 		}
-		mc->print = 1;
+		mc->print = 0;
 		rc = mdb_node_add(mc, mc->mc_ki[mc->mc_top], key, rdata, 0, nflags);
 		mc->print = 0;
 		if (flags&MDB_RESERVE) {
