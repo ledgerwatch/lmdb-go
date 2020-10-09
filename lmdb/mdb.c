@@ -7349,6 +7349,12 @@ mdb_node_add(MDB_cursor *mc, indx_t indx,
 
 	mdb_cassert(mc, mp->mp_upper >= mp->mp_lower);
 
+    struct timeval curtime;
+	struct timezone curzone;
+	gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - start\n", env, curtime.tv_sec, curtime.tv_usec);
+
+
 	DPRINTF(("add to %s %spage %"Z"u index %i, data size %"Z"u key size %"Z"u [%s]",
 	    IS_LEAF(mp) ? "leaf" : "branch",
 		IS_SUBP(mp) ? "sub-" : "",
@@ -7401,10 +7407,16 @@ mdb_node_add(MDB_cursor *mc, indx_t indx,
 	if ((ssize_t)node_size > room)
 		goto full;
 
+    gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - before loop\n", env, curtime.tv_sec, curtime.tv_usec);
+
 update:
 	/* Move higher pointers up one slot. */
 	for (i = NUMKEYS(mp); i > indx; i--)
 		mp->mp_ptrs[i] = mp->mp_ptrs[i - 1];
+
+    gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - after loop\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	/* Adjust free space offsets. */
 	ofs = mp->mp_upper - node_size;
@@ -7443,6 +7455,9 @@ update:
 				memcpy(ndata, data->mv_data, data->mv_size);
 		}
 	}
+
+    gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] mdb_node_add - end\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	return MDB_SUCCESS;
 
