@@ -6999,13 +6999,20 @@ new_sub:
 		rc = mdb_page_split(mc, key, rdata, P_INVALID, nflags);
 	} else {
 		/* There is room already in this leaf page. */
+		gettimeofday(&curtime, &curzone);
+        fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - before mdb_node_add'\n", env, curtime.tv_sec, curtime.tv_usec);
 		rc = mdb_node_add(mc, mc->mc_ki[mc->mc_top], key, rdata, 0, nflags);
-		if (rc == 0) {
+		gettimeofday(&curtime, &curzone);
+        fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after mdb_node_add'\n", env, curtime.tv_sec, curtime.tv_usec);
+        if (rc == 0) {
 			/* Adjust other cursors pointing to mp */
 			MDB_cursor *m2, *m3;
 			MDB_dbi dbi = mc->mc_dbi;
 			unsigned i = mc->mc_top;
 			MDB_page *mp = mc->mc_pg[i];
+
+            gettimeofday(&curtime, &curzone);
+            fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - before 'Adjust other cursors pointing to mp'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 			for (m2 = mc->mc_txn->mt_cursors[dbi]; m2; m2=m2->mc_next) {
 				if (mc->mc_flags & C_SUB)
@@ -7018,6 +7025,8 @@ new_sub:
 				}
 				XCURSOR_REFRESH(m3, i, mp);
 			}
+			gettimeofday(&curtime, &curzone);
+            fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'Adjust other cursors pointing to mp'\n", env, curtime.tv_sec, curtime.tv_usec);
 		}
 	}
 
