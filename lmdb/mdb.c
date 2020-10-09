@@ -6616,6 +6616,12 @@ mdb_cursor_put(MDB_cursor *mc, MDB_val *key, MDB_val *data,
 
 	dkey.mv_size = 0;
 
+    struct timeval curtime;
+    struct timezone curzone;
+    gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - start\n", env, curtime.tv_sec, curtime.tv_usec);
+
+
 	if (flags == MDB_CURRENT) {
 		if (!(mc->mc_flags & C_INITIALIZED))
 			return EINVAL;
@@ -6669,6 +6675,9 @@ mdb_cursor_put(MDB_cursor *mc, MDB_val *key, MDB_val *data,
 			return rc2;
 	}
 
+    gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (!nospill)'\n", env, curtime.tv_sec, curtime.tv_usec);
+
 	if (rc == MDB_NO_ROOT) {
 		MDB_page *np;
 		/* new database, write a root leaf page */
@@ -6690,6 +6699,9 @@ mdb_cursor_put(MDB_cursor *mc, MDB_val *key, MDB_val *data,
 		if (rc2)
 			return rc2;
 	}
+
+    gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (!nospill)'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	insert_key = insert_data = rc;
 	if (insert_key) {
@@ -6739,6 +6751,9 @@ fix_parent:
 			}
 			return MDB_SUCCESS;
 		}
+
+        gettimeofday(&curtime, &curzone);
+        fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (insert_key)'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 more:
 		leaf = NODEPTR(mc->mc_pg[mc->mc_top], mc->mc_ki[mc->mc_top]);
@@ -6875,6 +6890,10 @@ prep_subDB:
 				mdb_node_del(mc, 0);
 			goto new_sub;
 		}
+
+        gettimeofday(&curtime, &curzone);
+        fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'DB has dups?'\n", env, curtime.tv_sec, curtime.tv_usec);
+
 current:
 		/* LMDB passes F_SUBDATA in 'flags' to write a DB record */
 		if ((leaf->mn_flags ^ flags) & F_SUBDATA)
@@ -6963,6 +6982,10 @@ current:
 		mdb_node_del(mc, 0);
 	}
 
+	gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'overflow page overwrites need special handling'\n", env, curtime.tv_sec, curtime.tv_usec);
+
+
 	rdata = data;
 
 new_sub:
@@ -6997,6 +7020,9 @@ new_sub:
 			}
 		}
 	}
+
+    gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'new_sub:'\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	if (rc == MDB_SUCCESS) {
 		/* Now store the actual data in the child DB. Note that we're
@@ -7087,6 +7113,10 @@ bad_sub:
 		if (rc == MDB_KEYEXIST)	/* should not happen, we deleted that item */
 			rc = MDB_CORRUPTED;
 	}
+
+	gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (rc == MDB_SUCCESS):'\n", env, curtime.tv_sec, curtime.tv_usec);
+
 	mc->mc_txn->mt_flags |= MDB_TXN_ERROR;
 	return rc;
 }
