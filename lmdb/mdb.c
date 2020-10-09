@@ -7425,6 +7425,10 @@ update:
 	mp->mp_upper = ofs;
 	mp->mp_lower += sizeof(indx_t);
 
+    gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "[%ld:%d] mdb_node_add - after 'Adjust free space offsets'\n", curtime.tv_sec, curtime.tv_usec);
+
+
 	/* Write the node data. */
 	node = NODEPTR(mp, indx);
 	node->mn_ksize = (key == NULL) ? 0 : key->mv_size;
@@ -7434,10 +7438,13 @@ update:
 	else
 		SETPGNO(node,pgno);
 
+    gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "[%ld:%d] mdb_node_add - after 'Write the node data'\n", curtime.tv_sec, curtime.tv_usec);
+
 	if (key)
 		memcpy(NODEKEY(node), key->mv_data, key->mv_size);
 
-	if (IS_LEAF(mp)) {
+    if (IS_LEAF(mp)) {
 		ndata = NODEDATA(node);
 		if (ofp == NULL) {
 			if (F_ISSET(flags, F_BIGDATA))
