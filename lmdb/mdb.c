@@ -659,6 +659,7 @@ typedef uint16_t	 indx_t;
 	 *	Applications should set the table size using #mdb_env_set_maxreaders().
 	 */
 #define DEFAULT_READERS	126
+#define DEFAULT_MAXFREE_REUSE	10000
 
 	/**	The size of a CPU cache line in bytes. We want our lock structures
 	 *	aligned to this size to avoid false cache line sharing in the
@@ -3961,6 +3962,7 @@ mdb_env_create(MDB_env **env)
 		return ENOMEM;
 
 	e->me_maxreaders = DEFAULT_READERS;
+	e->me_maxfree_reuse = DEFAULT_MAXFREE_REUSE;
 	e->me_maxdbs = e->me_numdbs = CORE_DBS;
 	e->me_fd = INVALID_HANDLE_VALUE;
 	e->me_lfd = INVALID_HANDLE_VALUE;

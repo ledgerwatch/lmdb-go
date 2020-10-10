@@ -895,6 +895,8 @@ int  mdb_env_get_maxreaders(MDB_env *env, unsigned int *readers);
      * Recommended value: set it bigger than usual value size of your app - set it as high as possible, but remember
      * that corner-case described above start be noticeable after maxfree_reuse>1K.
      *
+     * Default value: 10K
+     *
 	 * @param[in] env An environment handle returned by #mdb_env_create()
      * @param[in] pages The maximum value size in pages which can reuse sequence from freelist.
      * @return A non-zero error value on failure and 0 on success
