@@ -881,19 +881,19 @@ int  mdb_env_get_maxreaders(MDB_env *env, unsigned int *readers);
      * just allocate new pages and even don't try to search if value is bigger than this limit.
      * Measured in pages.
      *
-     * Originally this parameter was introduced when "large freelist" (10K pages), after some it's pages re-used,
+     * Originally this parameter was introduced when "large freelist" (100K pages), after some it's pages re-used,
      * did save it's new value into FREE_DBI, but to write new value - it tried to find
      * contiguous page range in "large freelist" (how usually all updates work in LMDB), it took us
      * 10 minutes (it's part of mdb_txn_commit func). This corner-case starts to be visible after FREE_DBI gets
-     * over 1K pages.
-     * Notice: FREE_DBI stores id's of free pages, "FREE_DBI gets over 1K pages" means that DB has: 1K*PAGE_SIZE/8=512K free pages.
+     * over 10K pages.
+     * Notice: FREE_DBI stores id's of free pages, "FREE_DBI gets over 10K pages" means that DB has: 10K*PAGE_SIZE/8=5M free pages.
      *
      * Such "large freelist" can appear after write transactions of hundreds Gigabytes size
      * (for example data format migration or just big delete or DBI drop).
      * Our recommendation is to avoid accumulating such big freelist.
      *
      * Recommended value: set it bigger than usual value size of your app - set it as high as possible, but remember
-     * that corner-case described above start be noticeable after maxfree_reuse>1K.
+     * that corner-case described above start be noticeable after maxfree_reuse>10K.
      *
      * Default value: 10K
      *
