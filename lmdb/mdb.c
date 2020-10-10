@@ -1296,6 +1296,10 @@ struct MDB_env {
 	MDB_ID2L	me_dirty_list;
 	/** Max number of freelist items that can fit in a single overflow page */
 	int			me_maxfree_1pg;
+	/** Find a big enough contiguous page range for large values in freelist is hard
+        just allocate new pages and even don't try to search if value is bigger than this limit.
+        measured in pages */
+    unsigned int	me_maxfree_reuse;
 	/** Max size of a node on a page */
 	unsigned int	me_nodemax;
 #if !(MDB_MAXKEYSIZE)
@@ -2168,6 +2172,11 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 	MDB_cursor m2;
 	int found_old = 0;
 
+	/* Find a big enough contiguous page range for large values is hard
+	    just allocate new pages for large and even don't try to search */
+	if (((unsigned int)num) >= env->me_maxfree_reuse) {
+		goto no_search;
+	}
 	/* If there are any loose pages, just use them */
 	if (num == 1 && txn->mt_loose_pgs) {
 		np = txn->mt_loose_pgs;
@@ -2278,6 +2287,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 		mop_len = mop[0];
 	}
 
+no_search:
 	/* Use new pages from the map when nothing suitable in the freeDB */
 	i = 0;
 	pgno = txn->mt_next_pgno;
@@ -4081,6 +4091,22 @@ mdb_env_set_mapsize(MDB_env *env, size_t size)
 	env->me_mapsize = size;
 	if (env->me_psize)
 		env->me_maxpg = env->me_mapsize / env->me_psize;
+	return MDB_SUCCESS;
+}
+
+int ESECT
+mdb_env_set_maxfree_reuse(MDB_env *env, unsigned int pages)
+{
+	env->me_maxfree_reuse = pages;
+	return MDB_SUCCESS;
+}
+
+int ESECT
+mdb_env_get_maxfree_reuse(MDB_env *env, unsigned int *pages)
+{
+    if (!env || !pages)
+		return EINVAL;
+	*pages = env->me_maxfree_reuse;
 	return MDB_SUCCESS;
 }
 

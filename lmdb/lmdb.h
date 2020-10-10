@@ -875,6 +875,33 @@ int  mdb_env_set_maxreaders(MDB_env *env, unsigned int readers);
 	 */
 int  mdb_env_get_maxreaders(MDB_env *env, unsigned int *readers);
 
+    /** @brief set the maximum value size which can reuse pages sequence from freelist.
+     *
+     * Find a big enough contiguous page range for large values in freelist is hard
+     * just allocate new pages and even don't try to search if value is bigger than this limit.
+     * Measured in pages.
+     *
+     * Originally this parameter was introduced when "large freelist" (10K pages), after some it's pages re-used,
+     * did save it's new value into FREE_DBI, but to write new value - it tried to find
+     * contiguous page range in "large freelist" (how usually all updates work in LMDB), it took us
+     * 10 minutes (it's part of mdb_txn_commit func). This corner-case starts to be visible after FREE_DBI gets
+     * over 1K pages.
+     * Notice: FREE_DBI stores id's of free pages, "FREE_DBI gets over 1K pages" means that DB has: 1K*PAGE_SIZE/8=512K free pages.
+     *
+     * Such "large freelist" can appear after write transactions of hundreds Gigabytes size
+     * (for example data format migration or just big delete or DBI drop).
+     * Our recommendation is to avoid accumulating such big freelist.
+     *
+     * Recommended value: set it bigger than usual value size of your app - set it as high as possible, but remember
+     * that corner-case described above start be noticeable after maxfree_reuse>1K.
+     *
+	 * @param[in] env An environment handle returned by #mdb_env_create()
+     * @param[in] pages The maximum value size in pages which can reuse sequence from freelist.
+     * @return A non-zero error value on failure and 0 on success
+	 */
+int mdb_env_set_maxfree_reuse(MDB_env *env, unsigned int pages);
+int mdb_env_get_maxfree_reuse(MDB_env *env, unsigned int *pages);
+
 	/** @brief Set the maximum number of named databases for the environment.
 	 *
 	 * This function is only needed if multiple databases will be used in the
