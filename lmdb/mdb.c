@@ -2168,7 +2168,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 	pgno_t pgno, *mop = env->me_pghead;
 //    fprintf(stderr, "%p [%ld:%d] mdb_page_alloc - loop it %d\n", env, curtime.tv_sec, curtime.tv_usec, loop_it);
 //	fprintf(stderr, "Alex: %d\n", env->me_pghead);
-	fprintf(stderr, "Alex2: %d, %d\n", ((unsigned int)env->me_pghead[0]), ((unsigned int)env->me_pghead[1]);
+	fprintf(stderr, "Alex2: %d, %d\n", ((unsigned int)env->me_pghead[0]), ((unsigned int)env->me_pghead[1]));
 	unsigned i, j, mop_len = mop ? mop[0] : 0, n2 = num-1;
 	MDB_page *np;
 	txnid_t oldest = 0, last;
