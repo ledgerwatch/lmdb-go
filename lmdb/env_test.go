@@ -2,6 +2,7 @@ package lmdb
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -27,6 +28,88 @@ func TestEnv_Path_notOpen(t *testing.T) {
 	if path != "" {
 		t.Errorf("non-zero path returned before Open")
 	}
+}
+
+func TestEnv_WriteMap(t *testing.T) {
+	env, err := NewEnv()
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	_ = env.SetMaxDBs(100)
+
+	// open an environment
+	dir, err := ioutil.TempDir("", "mdb_test")
+	defer os.RemoveAll(dir)
+
+	err = env.Open(dir, WriteMap, 0644)
+	if err != nil {
+		defer env.Close()
+		if err != nil {
+			t.Fatalf("tempdir: %v", err)
+		}
+		t.Errorf("open: %v", err)
+	}
+	path, err := env.Path()
+	if err != nil {
+		t.Errorf("path: %v", err)
+	}
+	if path != dir {
+		t.Errorf("path: %q (!= %q)", path, dir)
+	}
+
+	var dbi DBI
+	err = env.Update(func(txn *Txn) (err error) {
+		dbi, err = txn.CreateDBI("test")
+		return err
+	})
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	err = env.Update(func(txn *Txn) (err error) {
+		for i := 0; i < 10_000; i++ {
+			newK := make([]byte, 8)
+			newV := make([]byte, 8)
+			binary.BigEndian.PutUint64(newK, uint64(i))
+			binary.BigEndian.PutUint64(newV, uint64(i))
+			txn.Put(dbi, newK, newV, 0)
+		}
+		return err
+	})
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	err = env.Update(func(txn *Txn) (err error) {
+		return txn.Drop(dbi, false)
+	})
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	err = env.View(func(txn *Txn) (err error) {
+		c, err := txn.OpenCursor(0)
+		if err != nil {
+			return err
+		}
+		_ = c
+		return nil
+		//for op := uint(First); ; op = Next {
+		//	k, v, err := c.Get(nil, nil, op)
+		//	if IsNotFound(err) {
+		//		return nil
+		//	}
+		//	if err != nil {
+		//		return err
+		//	}
+		//
+		//	fmt.Printf("%x, %x\n", k, v)
+		//}
+	})
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
 }
 
 func TestEnv_Path(t *testing.T) {
