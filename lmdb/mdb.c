@@ -2167,8 +2167,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 	MDB_env *env = txn->mt_env;
 	pgno_t pgno, *mop = env->me_pghead;
 //    fprintf(stderr, "%p [%ld:%d] mdb_page_alloc - loop it %d\n", env, curtime.tv_sec, curtime.tv_usec, loop_it);
-//	fprintf(stderr, "Alex: %d\n", env->me_pghead);
-    DPRINTF(("Alex: %"Z"u -> %"Z"u", env->me_pghead[0], env->me_pghead));
+	fprintf(stderr, "Alex: %"Z"u, %"Z"u\n", env->me_pghead[0], env->me_pghead[1]);
 	unsigned i, j, mop_len = mop ? mop[0] : 0, n2 = num-1;
 	MDB_page *np;
 	txnid_t oldest = 0, last;
