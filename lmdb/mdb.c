@@ -2180,7 +2180,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 	struct timezone curzone;
 	if (print) {
 		gettimeofday(&curtime, &curzone);
-		fprintf(stderr, "%p [%ld:%d] mdb_page_alloc %d\n", env, curtime.tv_sec, curtime.tv_usec, num);
+		fprintf(stderr, "%p [%ld:%d] mdb_page_alloc %d, Paranoid: %d, reuse: %d\n", env, curtime.tv_sec, curtime.tv_usec, num, Paranoid, env->me_maxfree_reuse);
 	}
 	/* Find a big enough contiguous page range for large values is hard
 	    just allocate new pages for large and even don't try to search */
@@ -2228,8 +2228,13 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 				}
 				goto search_done;
 			} while (--i > n2);
-			if (--retry < 0)
+			if (--retry < 0) {
+				if (print) {
+					gettimeofday(&curtime, &curzone);
+					fprintf(stderr, "%p [%ld:%d] mdb_page_alloc - quit by num of retries (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, loop_it);
+				}
 				break;
+			}
 		}
 
 		if (op == MDB_FIRST) {	/* 1st iteration */
