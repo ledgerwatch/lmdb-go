@@ -2220,13 +2220,14 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 			i = mop_len;
 			do {
 				pgno = mop[i];
-				if (mop[i-n2] == pgno+n2)
-				if (print) {
-					loop_it++;
-					gettimeofday(&curtime, &curzone);
-					fprintf(stderr, "%p [%ld:%d] mdb_page_alloc - found gap %d (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, n2+1, loop_it);
+				if (mop[i-n2] == pgno+n2) {
+					if (print) {
+						loop_it++;
+						gettimeofday(&curtime, &curzone);
+						fprintf(stderr, "%p [%ld:%d] mdb_page_alloc - found gap %d (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, n2+1, loop_it);
+					}
+					goto search_done;
 				}
-				goto search_done;
 			} while (--i > n2);
 			if (--retry < 0) {
 				if (print) {
