@@ -2102,17 +2102,21 @@ static txnid_t
 mdb_find_oldest(MDB_txn *txn)
 {
 	int i;
+	fprintf(stderr, "mdb_find_oldest mt_txnid %lu [",txn->mt_txnid);
 	txnid_t mr, oldest = txn->mt_txnid - 1;
 	if (txn->mt_env->me_txns) {
 		MDB_reader *r = txn->mt_env->me_txns->mti_readers;
+		fprintf(stderr, "readers=%d ", txn->mt_env->me_txns->mti_numreaders);
 		for (i = txn->mt_env->me_txns->mti_numreaders; --i >= 0; ) {
 			if (r[i].mr_pid) {
 				mr = r[i].mr_txnid;
+				fprintf(stderr, "%lu(%d) ", mr, r[i].mr_pid);
 				if (oldest > mr)
 					oldest = mr;
 			}
 		}
 	}
+	fprintf(stderr, "]\n");
 	return oldest;
 }
 
