@@ -2103,7 +2103,7 @@ mdb_find_oldest(MDB_txn *txn)
 {
 	int i;
 	fprintf(stderr, "mdb_find_oldest mt_txnid %lu [",txn->mt_txnid);
-	txnid_t mr, oldest = txn->mt_txnid - 1;
+	txnid_t mr, oldest = txn->mt_txnid;
 	if (txn->mt_env->me_txns) {
 		MDB_reader *r = txn->mt_env->me_txns->mti_readers;
 		fprintf(stderr, "readers=%d ", txn->mt_env->me_txns->mti_numreaders);
@@ -2322,7 +2322,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 		mop_len = mop[0];
 		if (print) {
 			gettimeofday(&curtime, &curzone);
-			fprintf(stderr, "%p [%ld:%d] mdb_page_alloc mop grew by %d to %d (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, mop_len, i, loop_it);
+			fprintf(stderr, "%p [%ld:%d] mdb_page_alloc mop grew to %d by %d (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, mop_len, i, loop_it);
 		}
 	}
 
