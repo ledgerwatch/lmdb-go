@@ -1623,6 +1623,8 @@ int	mdb_reader_list(MDB_env *env, MDB_msg_func *func, void *ctx);
 int	mdb_reader_check(MDB_env *env, int *dead);
 /**	@} */
 
+int mdb_env_excl_lock2(MDB_env *env, int *excl);
+
 #ifdef __cplusplus
 }
 #endif

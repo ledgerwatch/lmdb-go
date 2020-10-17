@@ -121,3 +121,4 @@ int lmdbgo_dcmp(MDB_txn *txn, MDB_dbi dbi, char *adata, size_t an, char *bdata, 
     LMDBGO_SET_VAL(&b, bn, bdata);
     return mdb_dcmp(txn, dbi, &a, &b);
 }
+

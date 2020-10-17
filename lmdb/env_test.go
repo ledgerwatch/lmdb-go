@@ -56,6 +56,40 @@ func TestEnv_Path(t *testing.T) {
 	}
 }
 
+func TestEnv_ExclusiveLock(t *testing.T) {
+	env, err := NewEnv()
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	// open an environment
+	dir, err := ioutil.TempDir("", "mdb_test")
+	if err != nil {
+		t.Fatalf("tempdir: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	result, err := env.ExclusiveLock()
+	if err != nil {
+		t.Errorf("path: %v", err)
+	}
+	if result != LockShared {
+		t.Errorf("expected: %q (!= %q)", LockShared, result)
+	}
+
+	err = env.Open(dir, 0, 0644)
+	defer env.Close()
+	if err != nil {
+		t.Errorf("open: %v", err)
+	}
+	result, err = env.ExclusiveLock()
+	if err != nil {
+		t.Errorf("path: %v", err)
+	}
+	if result != LockExclusive {
+		t.Errorf("expected: %q (!= %q)", LockExclusive, result)
+	}
+}
+
 func TestEnv_Open_notExist(t *testing.T) {
 	env, err := NewEnv()
 	if err != nil {

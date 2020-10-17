@@ -3,8 +3,8 @@ package lmdb
 /*
 #include <stdlib.h>
 #include <stdio.h>
-#include "lmdb.h"
 #include "lmdbgo.h"
+#include "lmdb.h"
 */
 import "C"
 
@@ -50,6 +50,13 @@ const (
 	// See mdb_env_copy2
 
 	CopyCompact = C.MDB_CP_COMPACT // Perform compaction while copying
+)
+
+// Constants for response of method mdb_env_excl_lock
+const (
+	LockExclusive = 1
+	LockShared    = 0
+	LockNoLock    = -1
 )
 
 // DBI is a handle for a database in an Env.
@@ -407,6 +414,12 @@ func (env *Env) SetMaxDBs(size int) error {
 	}
 	ret := C.mdb_env_set_maxdbs(env._env, C.MDB_dbi(size))
 	return operrno("mdb_env_set_maxdbs", ret)
+}
+
+func (env *Env) ExclusiveLock() (int, error) {
+	var lockResult = new(C.int)
+	ret := C.mdb_env_excl_lock2(env._env, lockResult)
+	return int(*lockResult), operrno("mdb_env_excl_lock", ret)
 }
 
 // BeginTxn is an unsafe, low-level method to initialize a new transaction on

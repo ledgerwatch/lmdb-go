@@ -4658,6 +4658,10 @@ mdb_env_excl_lock(MDB_env *env, int *excl)
 	return rc;
 }
 
+int mdb_env_excl_lock2(MDB_env *env, int *excl) {
+    return mdb_env_excl_lock(env, excl);
+}
+
 #ifdef MDB_USE_HASH
 /*
  * hash_64 - 64 bit Fowler/Noll/Vo-0 FNV-1a hash code
