@@ -68,7 +68,7 @@ func TestEnv_ExclusiveLock(t *testing.T) {
 		t.Fatalf("tempdir: %v", err)
 	}
 	defer os.RemoveAll(dir)
-	result, err := env.ExclusiveLock()
+	_, err = env.ExclusiveLock()
 	if err == nil || err.Error() != "mdb_env_excl_lock: bad file descriptor" {
 		t.Errorf("unexpected error: %+v", err)
 	}
@@ -78,7 +78,7 @@ func TestEnv_ExclusiveLock(t *testing.T) {
 	if err != nil {
 		t.Errorf("open: %v", err)
 	}
-	result, err = env.ExclusiveLock()
+	result, err := env.ExclusiveLock()
 	if err != nil {
 		t.Errorf("path: %v", err)
 	}
