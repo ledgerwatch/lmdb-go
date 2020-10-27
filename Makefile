@@ -36,4 +36,4 @@ check:
 	golint ./... | tee /dev/stderr | wc -l | xargs test 0 -eq
 
 install:
-	cd dist && make clean && make install # use DESTDIR
+	cd lmdb && make clean && make install # use DESTDIR
