@@ -56,3 +56,5 @@ issues:
     - linters:
         - stylecheck
       text: "(should be|should have name of the form)"
+  exclude:
+    - G404 # gosec:  Use of weak random number generator (math/rand instead of crypto/rand)
