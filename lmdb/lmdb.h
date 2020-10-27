@@ -1624,6 +1624,7 @@ int	mdb_reader_check(MDB_env *env, int *dead);
 /**	@} */
 
 int mdb_env_excl_lock2(MDB_env *env, int *excl);
+int mdb_env_share_locks2(MDB_env *env, int *excl);
 
 #ifdef __cplusplus
 }

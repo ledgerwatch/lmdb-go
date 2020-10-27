@@ -422,6 +422,12 @@ func (env *Env) ExclusiveLock() (int, error) {
 	return int(*lockResult), operrno("mdb_env_excl_lock", ret)
 }
 
+func (env *Env) ExclusiveUnlock() (int, error) {
+	var lockResult = new(C.int)
+	ret := C.mdb_env_share_locks2(env._env, lockResult)
+	return int(*lockResult), operrno("mdb_env_share_locks", ret)
+}
+
 // BeginTxn is an unsafe, low-level method to initialize a new transaction on
 // env.  The Txn returned by BeginTxn is unmanaged and must be terminated by
 // calling either its Abort or Commit methods to ensure that its resources are
