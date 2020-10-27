@@ -10,6 +10,7 @@ import "C"
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"runtime"
 	"sync"
@@ -419,12 +420,18 @@ func (env *Env) SetMaxDBs(size int) error {
 func (env *Env) ExclusiveLock() (int, error) {
 	var lockResult = new(C.int)
 	ret := C.mdb_env_excl_lock2(env._env, lockResult)
+	if ret == success && *lockResult != LockExclusive {
+		return int(*lockResult), fmt.Errorf("could'n upgrade lock to LockExclusive: %d", int(*lockResult))
+	}
 	return int(*lockResult), operrno("mdb_env_excl_lock", ret)
 }
 
 func (env *Env) ExclusiveUnlock() (int, error) {
 	var lockResult = new(C.int)
 	ret := C.mdb_env_share_locks2(env._env, lockResult)
+	if ret == success && *lockResult != LockShared {
+		return int(*lockResult), fmt.Errorf("could'n downgrade exclusive lock to LockShared: %d", int(*lockResult))
+	}
 	return int(*lockResult), operrno("mdb_env_share_locks", ret)
 }
 
