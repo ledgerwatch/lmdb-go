@@ -1024,3 +1024,69 @@ func BenchmarkCursor_Renew(b *testing.B) {
 		return nil
 	})
 }
+
+// This test verifies the behavior of Cursor.Count when DupSort is not enabled
+// on the database.
+func Test2(t *testing.T) {
+	env := setup(t)
+	defer clean(env, t)
+
+	var db DBI
+	err := env.Update(func(txn *Txn) (err error) {
+		db, err = txn.OpenDBI("testingnodup", Create)
+		if err != nil {
+			return err
+		}
+
+		_ = txn.Put(db, FromHex("01ff"), []byte("v1"), 0)
+		return txn.Put(db, FromHex("0101"), []byte("v2"), 0)
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = env.Update(func(txn *Txn) (err error) {
+		db, err = txn.OpenDBI("testingnodup", Create)
+		if err != nil {
+			return err
+		}
+
+		c, _ := txn.OpenCursor(db)
+		kk := FromHex("01ff")
+		// rename all last blocks to new forkId
+		k, v, _ := c.Get(kk, nil, SetRange)
+		c.Del(0)
+		kk[1] = 2
+		c.Put(kk, v, 0)
+
+		// Append new for as canonical
+		kk[1] = 1
+		k, v, _ = c.Get(kk, nil, SetRange)
+		kk = CopyBytes(k)
+		kk[1] = 255
+		c.Del(0)
+		c.Put(kk, v, Append)
+
+		k, v, _ = c.Get(nil, nil, First)
+		fmt.Printf("1: %x %s\n", k, v)
+		k, v, _ = c.Get(nil, nil, Next)
+		fmt.Printf("2: %x, %s\n", k, v)
+		k, v, _ = c.Get(nil, nil, Next)
+		fmt.Printf("3: %x, %s\n", k, v)
+		return nil
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+}
+
+func CopyBytes(b []byte) (copiedBytes []byte) {
+	if b == nil {
+		return nil
+	}
+	copiedBytes = make([]byte, len(b))
+	copy(copiedBytes, b)
+
+	return
+}
