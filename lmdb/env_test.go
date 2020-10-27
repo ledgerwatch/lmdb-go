@@ -69,8 +69,8 @@ func TestEnv_ExclusiveLock(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 	err = env.exclusiveLock()
-	if err == nil || (err.Error() != "mdb_env_excl_lock: bad file descriptor" && err.Error() != "mdb_env_excl_lock: The handle is invalid.") {
-		t.Errorf("unexpected error: %+v", err)
+	if err == nil {
+		t.Errorf("error expected")
 	}
 
 	err = env.Open(dir, Exclusive, 0644)
