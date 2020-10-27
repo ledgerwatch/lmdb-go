@@ -41,6 +41,7 @@ const (
 	NoLock      = C.MDB_NOLOCK     // Danger zone. LMDB does not use any locks.
 	NoReadahead = C.MDB_NORDAHEAD  // Disable readahead. Requires OS support.
 	NoMemInit   = C.MDB_NOMEMINIT  // Disable LMDB memory initialization.
+	Exclusive   = 0x10000000       // open environment in exclusive/monopolistic mode. This flag affects only at environment opening but can't be changed after.
 )
 
 // These flags are exclusively used in the Env.CopyFlags and Env.CopyFDFlags
@@ -103,7 +104,14 @@ func NewEnv() (*Env, error) {
 func (env *Env) Open(path string, flags uint, mode os.FileMode) error {
 	cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(cpath))
+	exclusive := flags&Exclusive != 0
+	if exclusive {
+		flags = flags ^ Exclusive
+	}
 	ret := C.mdb_env_open(env._env, cpath, C.uint(NoTLS|flags), C.mdb_mode_t(mode))
+	if ret == success && exclusive {
+		return env.exclusiveLock()
+	}
 	return operrno("mdb_env_open", ret)
 }
 
@@ -417,22 +425,15 @@ func (env *Env) SetMaxDBs(size int) error {
 	return operrno("mdb_env_set_maxdbs", ret)
 }
 
-func (env *Env) ExclusiveLock() (int, error) {
+// ExclusiveLock - open environment in exclusive/monopolistic mode.
+// This flag affects only at environment opening but can't be changed after.
+func (env *Env) exclusiveLock() error {
 	var lockResult = new(C.int)
 	ret := C.mdb_env_excl_lock2(env._env, lockResult)
 	if ret == success && *lockResult != LockExclusive {
-		return int(*lockResult), fmt.Errorf("could'n upgrade lock to LockExclusive: %d", int(*lockResult))
+		return fmt.Errorf("could'n upgrade lock to LockExclusive: %d", int(*lockResult))
 	}
-	return int(*lockResult), operrno("mdb_env_excl_lock", ret)
-}
-
-func (env *Env) ExclusiveUnlock() (int, error) {
-	var lockResult = new(C.int)
-	ret := C.mdb_env_share_locks2(env._env, lockResult)
-	if ret == success && *lockResult != LockShared {
-		return int(*lockResult), fmt.Errorf("could'n downgrade exclusive lock to LockShared: %d", int(*lockResult))
-	}
-	return int(*lockResult), operrno("mdb_env_share_locks", ret)
+	return operrno("mdb_env_excl_lock", ret)
 }
 
 // BeginTxn is an unsafe, low-level method to initialize a new transaction on
