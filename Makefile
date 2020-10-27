@@ -38,5 +38,5 @@ check:
 clean:
 	cd lmdb && make clean
 
-install:
-	cd dist && make clean && make install # use DESTDIR
+tools:
+	cd dist && make clean && make mdb_stat && make mdb_copy && make mdb_dump && make mdb_load  # use DESTDIR
