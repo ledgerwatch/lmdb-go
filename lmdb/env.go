@@ -431,7 +431,7 @@ func (env *Env) exclusiveLock() error {
 	var lockResult = new(C.int)
 	ret := C.mdb_env_excl_lock2(env._env, lockResult)
 	if ret == success && *lockResult != LockExclusive {
-		return fmt.Errorf("could'n upgrade lock to LockExclusive: %d", int(*lockResult))
+		return fmt.Errorf("could not upgrade lock to LockExclusive: %d", int(*lockResult))
 	}
 	return operrno("mdb_env_excl_lock", ret)
 }
