@@ -72,12 +72,6 @@ mdb_stat: mdb_stat.o liblmdb.a
 mdb_copy: mdb_copy.o liblmdb.a
 mdb_dump: mdb_dump.o liblmdb.a
 mdb_load: mdb_load.o liblmdb.a
-mtest:    mtest.o    liblmdb.a
-mtest2:	mtest2.o liblmdb.a
-mtest3:	mtest3.o liblmdb.a
-mtest4:	mtest4.o liblmdb.a
-mtest5:	mtest5.o liblmdb.a
-mtest6:	mtest6.o liblmdb.a
 
 mdb.o: mdb.c lmdb.h midl.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c mdb.c
