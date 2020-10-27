@@ -35,5 +35,8 @@ check:
 	which golint > /dev/null
 	golint ./... | tee /dev/stderr | wc -l | xargs test 0 -eq
 
+clean:
+	cd lmdb && make clean
+
 install:
-	cd lmdb && make clean && make install # use DESTDIR
+	cd dist && make clean && make install # use DESTDIR
