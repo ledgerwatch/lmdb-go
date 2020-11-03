@@ -101,6 +101,7 @@ extern int cacheflush(char *addr, int nbytes, int cache);
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/time.h>
 
 #ifdef _MSC_VER
 #include <io.h>
