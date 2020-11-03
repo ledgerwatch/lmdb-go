@@ -3083,6 +3083,9 @@ mdb_txn_abort(MDB_txn *txn)
 static int
 mdb_freelist_save(MDB_txn *txn)
 {
+    struct timeval curtime;
+	struct timezone curzone;
+
 	/* env->me_pghead[] can grow and shrink during this call.
 	 * env->me_pglast and txn->mt_free_pgs[] can only grow.
 	 * Page numbers cannot disappear from txn->mt_free_pgs[].
@@ -3151,7 +3154,9 @@ mdb_freelist_save(MDB_txn *txn)
 	clean_limit = (env->me_flags & (MDB_NOMEMINIT|MDB_WRITEMAP))
 		? SSIZE_MAX : maxfree_1pg;
 
+    int loop_it = 0;
 	for (;;) {
+        loop_it++;
 		/* Come back here after each Put() in case freelist changed */
 		MDB_val key, data;
 		pgno_t *pgs;
@@ -3247,6 +3252,10 @@ mdb_freelist_save(MDB_txn *txn)
 		} while (--j >= 0);
 		total_room += head_room;
 	}
+
+	loop_it++;
+    gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - loop: %d\n", env, curtime.tv_sec, curtime.tv_usec, loop_it);
 
 	/* Return loose page numbers to me_pghead, though usually none are
 	 * left at this point.  The pages themselves remain in dirty_list.
