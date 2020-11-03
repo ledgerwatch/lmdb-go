@@ -101,7 +101,6 @@ extern int cacheflush(char *addr, int nbytes, int cache);
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include<sys/time.h>
 
 #ifdef _MSC_VER
 #include <io.h>
@@ -1181,7 +1180,6 @@ struct MDB_xcursor;
 	 *	(A node with #F_DUPDATA but no #F_SUBDATA contains a subpage).
 	 */
 struct MDB_cursor {
-	int print;
 	/** Next cursor on this DB in this txn */
 	MDB_cursor	*mc_next;
 	/** Backup of the original cursor if this cursor is a shadow */
@@ -2105,21 +2103,17 @@ static txnid_t
 mdb_find_oldest(MDB_txn *txn)
 {
 	int i;
-	fprintf(stderr, "mdb_find_oldest mt_txnid %lu [",txn->mt_txnid);
-	txnid_t mr, oldest = txn->mt_txnid;
+	txnid_t mr, oldest = txn->mt_txnid - 1;
 	if (txn->mt_env->me_txns) {
 		MDB_reader *r = txn->mt_env->me_txns->mti_readers;
-		fprintf(stderr, "readers=%d ", txn->mt_env->me_txns->mti_numreaders);
 		for (i = txn->mt_env->me_txns->mti_numreaders; --i >= 0; ) {
 			if (r[i].mr_pid) {
 				mr = r[i].mr_txnid;
-				fprintf(stderr, "%lu(%d) ", mr, r[i].mr_pid);
 				if (oldest > mr)
 					oldest = mr;
 			}
 		}
 	}
-	fprintf(stderr, "]\n");
 	return oldest;
 }
 
@@ -2182,13 +2176,6 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 	MDB_cursor m2;
 	int found_old = 0;
 
-	int print = 1;
-    struct timeval curtime;
-	struct timezone curzone;
-	if (print) {
-		gettimeofday(&curtime, &curzone);
-		fprintf(stderr, "%p [%ld:%d] mdb_page_alloc %d, Paranoid: %d, reuse: %d\n", env, curtime.tv_sec, curtime.tv_usec, num, Paranoid, env->me_maxfree_reuse);
-	}
 	/* Find a big enough contiguous page range for large values is hard
 	    just allocate new pages for large and even don't try to search */
 	if (((unsigned int)num) >= env->me_maxfree_reuse) {
@@ -2213,9 +2200,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 		goto fail;
 	}
 
-	int loop_it = 0;
 	for (op = MDB_FIRST;; op = MDB_NEXT) {
-		loop_it++;
 		MDB_val key, data;
 		MDB_node *leaf;
 		pgno_t *idl;
@@ -2227,22 +2212,11 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 			i = mop_len;
 			do {
 				pgno = mop[i];
-				if (mop[i-n2] == pgno+n2) {
-					if (print) {
-						loop_it++;
-						gettimeofday(&curtime, &curzone);
-						fprintf(stderr, "%p [%ld:%d] mdb_page_alloc - found gap %d (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, n2+1, loop_it);
-					}
+				if (mop[i-n2] == pgno+n2)
 					goto search_done;
-				}
 			} while (--i > n2);
-			if (--retry < 0) {
-				if (print) {
-					gettimeofday(&curtime, &curzone);
-					fprintf(stderr, "%p [%ld:%d] mdb_page_alloc - quit by num of retries (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, loop_it);
-				}
+			if (--retry < 0)
 				break;
-			}
 		}
 
 		if (op == MDB_FIRST) {	/* 1st iteration */
@@ -2263,10 +2237,6 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 
 		last++;
 		/* Do not fetch more if the record will be too recent */
-		if (print) {
-			gettimeofday(&curtime, &curzone);
-			fprintf(stderr, "%p [%ld:%d] mdb_page_alloc after last++ - oldest %lu, last %lu (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, oldest, last, loop_it);
-		}
 		if (oldest <= last) {
 			if (!found_old) {
 				oldest = mdb_find_oldest(txn);
@@ -2283,10 +2253,6 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 			goto fail;
 		}
 		last = *(txnid_t*)key.mv_data;
-		if (print) {
-			gettimeofday(&curtime, &curzone);
-			fprintf(stderr, "%p [%ld:%d] mdb_page_alloc after updating last - oldest %lu, last %lu (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, oldest, last, loop_it);
-		}
 		if (oldest <= last) {
 			if (!found_old) {
 				oldest = mdb_find_oldest(txn);
@@ -2323,10 +2289,6 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 		/* Merge in descending sorted order */
 		mdb_midl_xmerge(mop, idl);
 		mop_len = mop[0];
-		if (print) {
-			gettimeofday(&curtime, &curzone);
-			fprintf(stderr, "%p [%ld:%d] mdb_page_alloc mop grew to %d by %d (it %d)\n", env, curtime.tv_sec, curtime.tv_usec, mop_len, i, loop_it);
-		}
 	}
 
 no_search:
@@ -3133,10 +3095,6 @@ mdb_freelist_save(MDB_txn *txn)
 	ssize_t	head_room = 0, total_room = 0, mop_len, clean_limit;
 
 	mdb_cursor_init(&mc, txn, FREE_DBI, NULL);
-	struct timeval curtime;
-	struct timezone curzone;
-	gettimeofday(&curtime, &curzone);
-	//fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - after mdb_cursor_init\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	if (env->me_pghead) {
 		/* Make sure first page of freeDB is touched and on freelist */
@@ -3193,8 +3151,6 @@ mdb_freelist_save(MDB_txn *txn)
 	clean_limit = (env->me_flags & (MDB_NOMEMINIT|MDB_WRITEMAP))
 		? SSIZE_MAX : maxfree_1pg;
 
-	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - before the main loop\n", env, curtime.tv_sec, curtime.tv_usec);
 	for (;;) {
 		/* Come back here after each Put() in case freelist changed */
 		MDB_val key, data;
@@ -3204,8 +3160,6 @@ mdb_freelist_save(MDB_txn *txn)
 		/* If using records from freeDB which we have not yet
 		 * deleted, delete them and any we reserved for me_pghead.
 		 */
-		gettimeofday(&curtime, &curzone);
-		fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - pglast %lu, env->me_pglast %lu\n", env, curtime.tv_sec, curtime.tv_usec, pglast, env->me_pglast);
 		while (pglast < env->me_pglast) {
 			rc = mdb_cursor_first(&mc, &key, NULL);
 			if (rc)
@@ -3213,8 +3167,6 @@ mdb_freelist_save(MDB_txn *txn)
 			pglast = head_id = *(txnid_t *)key.mv_data;
 			total_room = head_room = 0;
 			mdb_tassert(txn, pglast <= env->me_pglast);
-			gettimeofday(&curtime, &curzone);
-			fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - delete pglast %lu\n", env, curtime.tv_sec, curtime.tv_usec, pglast, pglast);
 			rc = mdb_cursor_del(&mc, 0);
 			if (rc)
 				return rc;
@@ -3234,8 +3186,6 @@ mdb_freelist_save(MDB_txn *txn)
 			key.mv_data = &txn->mt_txnid;
 			do {
 				freecnt = free_pgs[0];
-				gettimeofday(&curtime, &curzone);
-				fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - freecnt=%lu\n", env, curtime.tv_sec, curtime.tv_usec, freecnt);				
 				data.mv_size = MDB_IDL_SIZEOF(free_pgs);
 				rc = mdb_cursor_put(&mc, &key, &data, MDB_RESERVE);
 				if (rc)
@@ -3243,8 +3193,6 @@ mdb_freelist_save(MDB_txn *txn)
 				/* Retry if mt_free_pgs[] grew during the Put() */
 				free_pgs = txn->mt_free_pgs;
 			} while (freecnt < free_pgs[0]);
-			gettimeofday(&curtime, &curzone);
-			fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - after put subloop\n", env, curtime.tv_sec, curtime.tv_usec);
 			mdb_midl_sort(free_pgs);
 			memcpy(data.mv_data, free_pgs, data.mv_size);
 #if (MDB_DEBUG) > 1
@@ -3261,8 +3209,6 @@ mdb_freelist_save(MDB_txn *txn)
 
 		mop = env->me_pghead;
 		mop_len = (mop ? mop[0] : 0) + txn->mt_loose_count;
-		gettimeofday(&curtime, &curzone);
-		fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - mop_len\n", env, curtime.tv_sec, curtime.tv_usec, mop_len);
 
 		/* Reserve records for me_pghead[]. Split it if multi-page,
 		 * to avoid searching freeDB for a page range. Use keys in
@@ -3290,8 +3236,6 @@ mdb_freelist_save(MDB_txn *txn)
 		key.mv_size = sizeof(head_id);
 		key.mv_data = &head_id;
 		data.mv_size = (head_room + 1) * sizeof(pgno_t);
-		gettimeofday(&curtime, &curzone);
-		fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - reserve %lu for txid %lu\n", env, curtime.tv_sec, curtime.tv_usec, data.mv_size, head_id);
 		rc = mdb_cursor_put(&mc, &key, &data, MDB_RESERVE);
 		if (rc)
 			return rc;
@@ -3302,8 +3246,6 @@ mdb_freelist_save(MDB_txn *txn)
 			pgs[j] = 0;
 		} while (--j >= 0);
 		total_room += head_room;
-		gettimeofday(&curtime, &curzone);
-		fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - total_room %ld, head_room %ld\n", env, curtime.tv_sec, curtime.tv_usec, total_room, head_room);
 	}
 
 	/* Return loose page numbers to me_pghead, though usually none are
@@ -3328,8 +3270,6 @@ mdb_freelist_save(MDB_txn *txn)
 		mop_len = mop[0];
 	}
 
-	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - before filling in mop_len\n", env, curtime.tv_sec, curtime.tv_usec, mop_len);
 	/* Fill in the reserved me_pghead records */
 	rc = MDB_SUCCESS;
 	if (mop_len) {
@@ -3351,8 +3291,6 @@ mdb_freelist_save(MDB_txn *txn)
 			data.mv_data = mop -= len;
 			save = mop[0];
 			mop[0] = len;
-			gettimeofday(&curtime, &curzone);
-			fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - writing %ld for id %lu\n", env, curtime.tv_sec, curtime.tv_usec, len, id);
 			rc = mdb_cursor_put(&mc, &key, &data, MDB_CURRENT);
 			mop[0] = save;
 			if (rc || !(mop_len -= len))
@@ -3684,10 +3622,6 @@ mdb_txn_commit(MDB_txn *txn)
 		goto fail;
 	}
 
-	struct timeval curtime;
-	struct timezone curzone;
-	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] commit - before mdb_cursor_close\n", env, curtime.tv_sec, curtime.tv_usec);
 	mdb_cursors_close(txn, 0);
 
 	if (!txn->mt_u.dirty_list[0].mid &&
@@ -3720,25 +3654,18 @@ mdb_txn_commit(MDB_txn *txn)
 		}
 	}
 
-	//gettimeofday(&curtime, &curzone);
-    //fprintf(stderr, "%p [%ld:%d] commit - before mdb_freelist_save\n", env, curtime.tv_sec, curtime.tv_usec);
 	rc = mdb_freelist_save(txn);
 	if (rc)
 		goto fail;
-	//gettimeofday(&curtime, &curzone);
-	//fprintf(stderr, "%p [%ld:%d] commit - before mdb_midl_free\n", env, curtime.tv_sec, curtime.tv_usec);
+
 	mdb_midl_free(env->me_pghead);
 	env->me_pghead = NULL;
-	//gettimeofday(&curtime, &curzone);
-	//fprintf(stderr, "%p [%ld:%d] commit - before mdb_midl_shrink\n", env, curtime.tv_sec, curtime.tv_usec);
 	mdb_midl_shrink(&txn->mt_free_pgs);
 
 #if (MDB_DEBUG) > 2
 	mdb_audit(txn);
 #endif
 
-	//gettimeofday(&curtime, &curzone);
-	//fprintf(stderr, "%p [%ld:%d] commit - before mdb_page_flush\n", env, curtime.tv_sec, curtime.tv_usec);
 	if ((rc = mdb_page_flush(txn, 0)) ||
 		(rc = mdb_env_sync(env, 0)) ||
 		(rc = mdb_env_write_meta(txn)))
@@ -3746,11 +3673,7 @@ mdb_txn_commit(MDB_txn *txn)
 	end_mode = MDB_END_COMMITTED|MDB_END_UPDATE;
 
 done:
-	//gettimeofday(&curtime, &curzone);
-	//fprintf(stderr, "%p [%ld:%d] commit - before mdb_txn_end\n", env, curtime.tv_sec, curtime.tv_usec);
 	mdb_txn_end(txn, end_mode);
-	gettimeofday(&curtime, &curzone);
-	fprintf(stderr, "%p [%ld:%d] commit - after mdb_txn_end\n", env, curtime.tv_sec, curtime.tv_usec);
 	return MDB_SUCCESS;
 
 fail:
@@ -6702,12 +6625,6 @@ mdb_cursor_put(MDB_cursor *mc, MDB_val *key, MDB_val *data,
 
 	dkey.mv_size = 0;
 
-	if (flags&MDB_RESERVE) {
-    	//gettimeofday(&curtime, &curzone);
-    	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - start\n", env, curtime.tv_sec, curtime.tv_usec);
-	}
-
-
 	if (flags == MDB_CURRENT) {
 		if (!(mc->mc_flags & C_INITIALIZED))
 			return EINVAL;
@@ -6761,11 +6678,6 @@ mdb_cursor_put(MDB_cursor *mc, MDB_val *key, MDB_val *data,
 			return rc2;
 	}
 
-	if (flags&MDB_RESERVE) {
-    	//gettimeofday(&curtime, &curzone);
-    	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (!nospill)'\n", env, curtime.tv_sec, curtime.tv_usec);
-	}
-
 	if (rc == MDB_NO_ROOT) {
 		MDB_page *np;
 		/* new database, write a root leaf page */
@@ -6786,11 +6698,6 @@ mdb_cursor_put(MDB_cursor *mc, MDB_val *key, MDB_val *data,
 		rc2 = mdb_cursor_touch(mc);
 		if (rc2)
 			return rc2;
-	}
-
-	if (flags&MDB_RESERVE) {
-    	//gettimeofday(&curtime, &curzone);
-    	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (!nospill)'\n", env, curtime.tv_sec, curtime.tv_usec);
 	}
 
 	insert_key = insert_data = rc;
@@ -6840,11 +6747,6 @@ fix_parent:
 					return rc2;
 			}
 			return MDB_SUCCESS;
-		}
-
-		if (flags&MDB_RESERVE) {
-        	//gettimeofday(&curtime, &curzone);
-        	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (insert_key)'\n", env, curtime.tv_sec, curtime.tv_usec);
 		}
 
 more:
@@ -6982,12 +6884,6 @@ prep_subDB:
 				mdb_node_del(mc, 0);
 			goto new_sub;
 		}
-
-		if (flags&MDB_RESERVE) {
-        	//gettimeofday(&curtime, &curzone);
-        	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'DB has dups?'\n", env, curtime.tv_sec, curtime.tv_usec);
-		}
-
 current:
 		/* LMDB passes F_SUBDATA in 'flags' to write a DB record */
 		if ((leaf->mn_flags ^ flags) & F_SUBDATA)
@@ -7076,12 +6972,6 @@ current:
 		mdb_node_del(mc, 0);
 	}
 
-	if (flags&MDB_RESERVE) {
-		//gettimeofday(&curtime, &curzone);
-    	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'overflow page overwrites need special handling'\n", env, curtime.tv_sec, curtime.tv_usec);
-	}
-
-
 	rdata = data;
 
 new_sub:
@@ -7095,27 +6985,13 @@ new_sub:
 		rc = mdb_page_split(mc, key, rdata, P_INVALID, nflags);
 	} else {
 		/* There is room already in this leaf page. */
-		if (flags&MDB_RESERVE) {
-			//gettimeofday(&curtime, &curzone);
-        	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - before mdb_node_add\n", env, curtime.tv_sec, curtime.tv_usec);
-		}
-		mc->print = 1;
 		rc = mdb_node_add(mc, mc->mc_ki[mc->mc_top], key, rdata, 0, nflags);
-		mc->print = 1;
-		if (flags&MDB_RESERVE) {
-			//gettimeofday(&curtime, &curzone);
-        	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after mdb_node_add\n", env, curtime.tv_sec, curtime.tv_usec);
-		}
-        if (rc == 0) {
+		if (rc == 0) {
 			/* Adjust other cursors pointing to mp */
 			MDB_cursor *m2, *m3;
 			MDB_dbi dbi = mc->mc_dbi;
 			unsigned i = mc->mc_top;
 			MDB_page *mp = mc->mc_pg[i];
-			if (flags&MDB_RESERVE) {
-            	//gettimeofday(&curtime, &curzone);
-            	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - before 'Adjust other cursors pointing to mp'\n", env, curtime.tv_sec, curtime.tv_usec);
-			}
 
 			for (m2 = mc->mc_txn->mt_cursors[dbi]; m2; m2=m2->mc_next) {
 				if (mc->mc_flags & C_SUB)
@@ -7128,16 +7004,7 @@ new_sub:
 				}
 				XCURSOR_REFRESH(m3, i, mp);
 			}
-			if (flags&MDB_RESERVE) {
-				//gettimeofday(&curtime, &curzone);
-            	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'Adjust other cursors pointing to mp'\n", env, curtime.tv_sec, curtime.tv_usec);
-			}
 		}
-	}
-
-	if (flags&MDB_RESERVE) {
-    	//gettimeofday(&curtime, &curzone);
-    	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'new_sub:'\n", env, curtime.tv_sec, curtime.tv_usec);
 	}
 
 	if (rc == MDB_SUCCESS) {
@@ -7229,12 +7096,6 @@ bad_sub:
 		if (rc == MDB_KEYEXIST)	/* should not happen, we deleted that item */
 			rc = MDB_CORRUPTED;
 	}
-
-	if (flags&MDB_RESERVE) {
-		//gettimeofday(&curtime, &curzone);
-    	//fprintf(stderr, "%p [%ld:%d] mdb_cursor_put - after 'if (rc == MDB_SUCCESS):'\n", env, curtime.tv_sec, curtime.tv_usec);
-	}
-
 	mc->mc_txn->mt_flags |= MDB_TXN_ERROR;
 	return rc;
 }
@@ -7512,7 +7373,6 @@ mdb_node_add(MDB_cursor *mc, indx_t indx,
 	if ((ssize_t)node_size > room)
 		goto full;
 
-
 update:
 	/* Move higher pointers up one slot. */
 	for (i = NUMKEYS(mp); i > indx; i--)
@@ -7524,7 +7384,6 @@ update:
 	mp->mp_ptrs[indx] = ofs;
 	mp->mp_upper = ofs;
 	mp->mp_lower += sizeof(indx_t);
-
 
 	/* Write the node data. */
 	node = NODEPTR(mp, indx);
@@ -7538,29 +7397,24 @@ update:
 	if (key)
 		memcpy(NODEKEY(node), key->mv_data, key->mv_size);
 
-    if (IS_LEAF(mp)) {
+	if (IS_LEAF(mp)) {
 		ndata = NODEDATA(node);
 		if (ofp == NULL) {
-
 			if (F_ISSET(flags, F_BIGDATA))
 				memcpy(ndata, data->mv_data, sizeof(pgno_t));
 			else if (F_ISSET(flags, MDB_RESERVE))
 				data->mv_data = ndata;
 			else
 				memcpy(ndata, data->mv_data, data->mv_size);
-
 		} else {
-
 			memcpy(ndata, &ofp->mp_pgno, sizeof(pgno_t));
 			ndata = METADATA(ofp);
 			if (F_ISSET(flags, MDB_RESERVE))
 				data->mv_data = ndata;
 			else
 				memcpy(ndata, data->mv_data, data->mv_size);
-
 		}
 	}
-
 
 	return MDB_SUCCESS;
 

@@ -34,3 +34,9 @@ check:
 	find . -name '*.go' | xargs goimports -d | tee /dev/stderr | wc -l | xargs test 0 -eq
 	which golint > /dev/null
 	golint ./... | tee /dev/stderr | wc -l | xargs test 0 -eq
+
+clean:
+	cd lmdb && make clean
+
+tools:
+	cd dist && make clean && make mdb_stat && make mdb_copy && make mdb_dump && make mdb_load  # use DESTDIR
