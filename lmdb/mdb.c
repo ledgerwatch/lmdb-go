@@ -3087,10 +3087,7 @@ mdb_freelist_save(MDB_txn *txn)
     struct timeval curtime;
 	struct timezone curzone;
 
-    gettimeofday(&curtime, &curzone);
-    fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - start\n", env, curtime.tv_sec, curtime.tv_usec);
-
-	/* env->me_pghead[] can grow and shrink during this call.
+    /* env->me_pghead[] can grow and shrink during this call.
 	 * env->me_pglast and txn->mt_free_pgs[] can only grow.
 	 * Page numbers cannot disappear from txn->mt_free_pgs[].
 	 */
@@ -3102,6 +3099,10 @@ mdb_freelist_save(MDB_txn *txn)
 	ssize_t	head_room = 0, total_room = 0, mop_len, clean_limit;
 
 	mdb_cursor_init(&mc, txn, FREE_DBI, NULL);
+
+    gettimeofday(&curtime, &curzone);
+    fprintf(stderr, "%p [%ld:%d] mdb_freelist_save - start\n", env, curtime.tv_sec, curtime.tv_usec);
+
 
 	if (env->me_pghead) {
 		/* Make sure first page of freeDB is touched and on freelist */
