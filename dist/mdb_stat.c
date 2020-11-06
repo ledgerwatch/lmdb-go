@@ -256,13 +256,13 @@ int main(int argc, char *argv[])
                     for (j=0; j<NUMKEYS(mp); j++) {
                         MDB_node *leaf = NODEPTR(mp, j);
                         if (leaf->mn_flags & F_SUBDATA) {
-                            MDB_db db;
-                            memcpy(&db, NODEDATA(leaf), sizeof(db));
+                            MDB_db db3;
+                            memcpy(&db3, NODEDATA(leaf), sizeof(db3));
 
-                            mst->ms_branch_pages = db.md_branch_pages;
-                            mst->ms_leaf_pages = db.md_leaf_pages;
-                            mst->ms_overflow_pages = db.md_overflow_pages;
-//                         	mst->ms_entries = db->md_entries;
+                            mst->ms_branch_pages = db3.md_branch_pages;
+                            mst->ms_leaf_pages = db3.md_leaf_pages;
+                            mst->ms_overflow_pages = db3.md_overflow_pages;
+//                         	mst->ms_entries = db3->md_entries;
                         }
                     }
                 }
