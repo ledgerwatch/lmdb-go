@@ -1774,7 +1774,6 @@ void mdb_stat_dup(MDB_txn *txn, MDB_dbi db2, MDB_stat *arg)
             }
         }
     }
-    mdb_cursor_close(&mc);
 }
 
 
