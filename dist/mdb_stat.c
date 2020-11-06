@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define MDB_DEBUG 2
 #include "lmdb.h"
 
 #ifdef	_WIN32

@@ -7,8 +7,6 @@
 
 #include "lmdb.h"
 
-#define MDB_DEBUG 2
-
 /* Proxy functions for lmdb get/put operations. The functions are defined to
  * take char* values instead of void* to keep cgo from cheking their data for
  * nested pointers and causing a couple of allocations per argument.
