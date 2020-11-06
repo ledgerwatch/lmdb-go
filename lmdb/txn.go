@@ -577,3 +577,8 @@ func (txn *Txn) DCmp(dbi DBI, a []byte, b []byte) int {
 	}
 	return 0
 }
+
+// Underlying *C.MDB_txn
+func (txn *Txn) CHandle() unsafe.Pointer {
+	return unsafe.Pointer(txn._txn)
+}
