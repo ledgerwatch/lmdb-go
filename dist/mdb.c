@@ -1692,7 +1692,6 @@ mdb_cursor_chk(MDB_cursor *mc)
 }
 #endif
 
-#if (MDB_DEBUG) > 2
 /** Count all the pages in each DB and in the freelist
  *  and make sure it matches the actual number of pages
  *  being used.
@@ -1748,7 +1747,6 @@ static void mdb_audit(MDB_txn *txn)
 			freecount+count+NUM_METAS, txn->mt_next_pgno);
 	}
 }
-#endif
 
 void mdb_stat_dup(MDB_txn *txn, MDB_dbi db2, MDB_stat *arg)
 {
