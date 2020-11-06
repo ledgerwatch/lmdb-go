@@ -999,17 +999,6 @@ typedef struct MDB_node {
 	/** Set the \b node's key into \b key. */
 #define MDB_GET_KEY2(node, key)	{ key.mv_size = NODEKSZ(node); key.mv_data = NODEKEY(node); }
 
-	/** Information about a single database in the environment. */
-typedef struct MDB_db {
-	uint32_t	md_pad;		/**< also ksize for LEAF2 pages */
-	uint16_t	md_flags;	/**< @ref mdb_dbi_open */
-	uint16_t	md_depth;	/**< depth of this tree */
-	pgno_t		md_branch_pages;	/**< number of internal pages */
-	pgno_t		md_leaf_pages;		/**< number of leaf pages */
-	pgno_t		md_overflow_pages;	/**< number of overflow pages */
-	size_t		md_entries;		/**< number of data items */
-	pgno_t		md_root;		/**< the root page of this tree */
-} MDB_db;
 
 #define MDB_VALID	0x8000		/**< DB handle is valid, for me_dbflags */
 #define PERSISTENT_FLAGS	(0xffff & ~(MDB_VALID))
