@@ -1754,6 +1754,7 @@ void mdb_stat_dup(MDB_txn *txn, MDB_dbi db2, MDB_stat *arg)
 {
     if (!(txn->mt_dbs[db2].md_flags & MDB_DUPSORT)) return;
 
+    mdb_audit(txn);
     MDB_cursor mc;
     mdb_cursor_init(&mc, txn, FREE_DBI, NULL);
 	int rc;
