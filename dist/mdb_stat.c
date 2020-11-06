@@ -245,29 +245,7 @@ int main(int argc, char *argv[])
 				goto txn_abort;
 			}
 
-			if (db2.md_flags & MDB_DUPSORT) {
-				MDB_cursor mc;
-                mdb_cursor_init(&mc, txn, FREE_DBI, NULL);
-                rc = mdb_page_search(&mc, NULL, MDB_PS_FIRST);
-                for (; rc == MDB_SUCCESS; rc = mdb_cursor_sibling(&mc, 1)) {
-                    unsigned j;
-                    MDB_page *mp;
-                    mp = mc.mc_pg[mc.mc_top];
-                    for (j=0; j<NUMKEYS(mp); j++) {
-                        MDB_node *leaf = NODEPTR(mp, j);
-                        if (leaf->mn_flags & F_SUBDATA) {
-                            MDB_db db3;
-                            memcpy(&db3, NODEDATA(leaf), sizeof(db3));
-
-                            mst->ms_branch_pages = db3.md_branch_pages;
-                            mst->ms_leaf_pages = db3.md_leaf_pages;
-                            mst->ms_overflow_pages = db3.md_overflow_pages;
-//                         	mst->ms_entries = db3->md_entries;
-                        }
-                    }
-                }
-                mdb_tassert(txn, rc == MDB_NOTFOUND);
-            }
+            mdb_stat_dup(txn, db2, &mst);
 			prstat(&mst);
 			mdb_close(env, db2);
 		}

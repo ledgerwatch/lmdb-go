@@ -259,18 +259,6 @@ typedef struct MDB_val {
 	void		*mv_data;	/**< address of the data item */
 } MDB_val;
 
-	/** Information about a single database in the environment. */
-typedef struct MDB_db {
-	uint32_t	md_pad;		/**< also ksize for LEAF2 pages */
-	uint16_t	md_flags;	/**< @ref mdb_dbi_open */
-	uint16_t	md_depth;	/**< depth of this tree */
-	pgno_t		md_branch_pages;	/**< number of internal pages */
-	pgno_t		md_leaf_pages;		/**< number of leaf pages */
-	pgno_t		md_overflow_pages;	/**< number of overflow pages */
-	size_t		md_entries;		/**< number of data items */
-	pgno_t		md_root;		/**< the root page of this tree */
-} MDB_db;
-
 /** @brief A callback function used to compare two keys in a database */
 typedef int  (MDB_cmp_func)(const MDB_val *a, const MDB_val *b);
 
@@ -1633,6 +1621,9 @@ int	mdb_reader_list(MDB_env *env, MDB_msg_func *func, void *ctx);
 	 * @return 0 on success, non-zero on failure.
 	 */
 int	mdb_reader_check(MDB_env *env, int *dead);
+
+void mdb_stat_dup(MDB_txn *txn, MDB_dbi db2, MDB_stat *arg);
+
 /**	@} */
 
 #ifdef __cplusplus

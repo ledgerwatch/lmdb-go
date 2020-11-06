@@ -999,6 +999,17 @@ typedef struct MDB_node {
 	/** Set the \b node's key into \b key. */
 #define MDB_GET_KEY2(node, key)	{ key.mv_size = NODEKSZ(node); key.mv_data = NODEKEY(node); }
 
+	/** Information about a single database in the environment. */
+typedef struct MDB_db {
+	uint32_t	md_pad;		/**< also ksize for LEAF2 pages */
+	uint16_t	md_flags;	/**< @ref mdb_dbi_open */
+	uint16_t	md_depth;	/**< depth of this tree */
+	pgno_t		md_branch_pages;	/**< number of internal pages */
+	pgno_t		md_leaf_pages;		/**< number of leaf pages */
+	pgno_t		md_overflow_pages;	/**< number of overflow pages */
+	size_t		md_entries;		/**< number of data items */
+	pgno_t		md_root;		/**< the root page of this tree */
+} MDB_db;
 
 #define MDB_VALID	0x8000		/**< DB handle is valid, for me_dbflags */
 #define PERSISTENT_FLAGS	(0xffff & ~(MDB_VALID))
@@ -1738,6 +1749,34 @@ static void mdb_audit(MDB_txn *txn)
 	}
 }
 #endif
+
+void mdb_stat_dup(MDB_txn *txn, MDB_dbi db2, MDB_stat *arg)
+{
+    if (!(txn->mt_dbs[db2].md_flags & MDB_DUPSORT)) return;
+
+    MDB_cursor mc;
+    mdb_cursor_init(&mc, txn, FREE_DBI, NULL);
+	int rc;
+
+    rc = mdb_page_search(&mc, NULL, MDB_PS_FIRST);
+    for (; rc == MDB_SUCCESS; rc = mdb_cursor_sibling(&mc, 1)) {
+        unsigned j;
+        MDB_page *mp;
+        mp = mc.mc_pg[mc.mc_top];
+        for (j=0; j<NUMKEYS(mp); j++) {
+            MDB_node *leaf = NODEPTR(mp, j);
+            if (leaf->mn_flags & F_SUBDATA) {
+                MDB_db db;
+                memcpy(&db, NODEDATA(leaf), sizeof(db));
+                arg->ms_branch_pages += db.md_branch_pages;
+                arg->ms_leaf_pages += db.md_leaf_pages;
+                arg->ms_overflow_pages += db.md_overflow_pages;
+            }
+        }
+    }
+    mdb_cursor_close(&mc);
+}
+
 
 int
 mdb_cmp(MDB_txn *txn, MDB_dbi dbi, const MDB_val *a, const MDB_val *b)
