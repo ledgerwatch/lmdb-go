@@ -473,7 +473,7 @@ typedef MDB_ID	txnid_t;
 	 *	Set this to 1 for copious tracing. Set to 2 to add dumps of all IDLs
 	 *	read from and written to the database (used for free space management).
 	 */
-#define MDB_DEBUG 2
+#define MDB_DEBUG 0
 #endif
 
 #if MDB_DEBUG
@@ -1743,7 +1743,7 @@ static void mdb_audit(MDB_txn *txn)
 	}
 	if (freecount + count + NUM_METAS != txn->mt_next_pgno) {
 		fprintf(stderr, "audit: %"Z"u free_pages: %"Z"u dbi_pages: %"Z"u next_pgno: %"Z"u\n",
-			txn->mt_txnid, freecount, count+NUM_METAS,, txn->mt_next_pgno);
+			txn->mt_txnid, freecount, count+NUM_METAS, txn->mt_next_pgno);
 	}
 }
 

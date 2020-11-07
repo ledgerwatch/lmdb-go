@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "mdb_stat failed, error %d %s\n", rc, mdb_strerror(rc));
 		goto txn_abort;
 	}
+	mdb_stat_dup(txn, dbi, &mst);
 	printf("Status of %s\n", subname ? subname : "Main DB");
 	prstat(&mst);
 
