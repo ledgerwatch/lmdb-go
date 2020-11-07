@@ -1742,9 +1742,8 @@ static void mdb_audit(MDB_txn *txn)
 		}
 	}
 	if (freecount + count + NUM_METAS != txn->mt_next_pgno) {
-		fprintf(stderr, "audit: %"Z"u freecount: %"Z"u count: %"Z"u total: %"Z"u next_pgno: %"Z"u\n",
-			txn->mt_txnid, freecount, count+NUM_METAS,
-			freecount+count+NUM_METAS, txn->mt_next_pgno);
+		fprintf(stderr, "audit: %"Z"u free_pages: %"Z"u dbi_pages: %"Z"u next_pgno: %"Z"u\n",
+			txn->mt_txnid, freecount, count+NUM_METAS,, txn->mt_next_pgno);
 	}
 }
 
