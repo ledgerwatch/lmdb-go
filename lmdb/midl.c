@@ -16,6 +16,7 @@
  * <http://www.OpenLDAP.org/license.html>.
  */
 
+#include <stdio.h>
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
@@ -321,15 +322,18 @@ int mdb_mid2l_insert( MDB_ID2L ids, MDB_ID2 *id )
 
 	if( x < 1 ) {
 		/* internal error */
+		fprintf(stderr, "mdb_mid2l_insert -2 (x < 1)\n");
 		return -2;
 	}
 
 	if ( x <= ids[0].mid && ids[x].mid == id->mid ) {
+		fprintf(stderr, "mdb_mid2l_insert -1 duplicate\n");
 		/* duplicate */
 		return -1;
 	}
 
 	if ( ids[0].mid >= MDB_IDL_UM_MAX ) {
+		fprintf(stderr, "mdb_mid2l_insert -2 too big\n");
 		/* too big */
 		return -2;
 
