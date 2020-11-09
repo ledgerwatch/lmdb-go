@@ -2769,6 +2769,9 @@ mdb_txn_renew0(MDB_txn *txn)
 			txn->mt_txnid = meta->mm_txnid;
 		}
 		txn->mt_txnid+=2;
+		if (txn->mt_txnid < 1000000) {
+			txn->mt_txnid = 1000000;
+		}
 #if MDB_DEBUG
 		if (txn->mt_txnid == mdb_debug_start)
 			mdb_debug = 1;
