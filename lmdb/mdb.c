@@ -2770,7 +2770,7 @@ mdb_txn_renew0(MDB_txn *txn)
 		}
 		txn->mt_txnid++;
 		if (txn->mt_txnid < 1000000) {
-			txn->mt_txnid = 1000000;
+			txn->mt_txnid = 1000000 + (txn->mt_txnid & 1);
 		}
 #if MDB_DEBUG
 		if (txn->mt_txnid == mdb_debug_start)
