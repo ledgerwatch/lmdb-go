@@ -2103,7 +2103,7 @@ static txnid_t
 mdb_find_oldest(MDB_txn *txn)
 {
 	int i;
-	txnid_t mr, oldest = txn->mt_txnid;
+	txnid_t mr, oldest = txn->mt_txnid - 1; // oldest is the tx id that a new reader would get if it joins now, that is why we start from it
 	if (txn->mt_env->me_txns) {
 		MDB_reader *r = txn->mt_env->me_txns->mti_readers;
 		for (i = txn->mt_env->me_txns->mti_numreaders; --i >= 0; ) {
@@ -2236,14 +2236,16 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 			break;
 
 		last++;
-		/* Do not fetch more if the record will be too recent */
-		if (oldest <= last) {
+		/* Do not fetch more if the record will be too recent. oldest == last is allowed, because a reader
+		   observing the state of the database just after TxID == oldest, cannot observe that pages that
+		   are in the freelist created by that TxID. Therefore, the pages in that freelist can be reused already  */
+		if (oldest < last) {
 			if (!found_old) {
 				oldest = mdb_find_oldest(txn);
 				env->me_pgoldest = oldest;
 				found_old = 1;
 			}
-			if (oldest <= last)
+			if (oldest < last)
 				break;
 		}
 		rc = mdb_cursor_get(&m2, &key, NULL, op);
@@ -2253,13 +2255,13 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 			goto fail;
 		}
 		last = *(txnid_t*)key.mv_data;
-		if (oldest <= last) {
+		if (oldest < last) {
 			if (!found_old) {
 				oldest = mdb_find_oldest(txn);
 				env->me_pgoldest = oldest;
 				found_old = 1;
 			}
-			if (oldest <= last)
+			if (oldest < last)
 				break;
 		}
 		np = m2.mc_pg[m2.mc_top];
