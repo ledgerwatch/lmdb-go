@@ -1086,32 +1086,48 @@ func TestTxn_Freelist_reuse(t *testing.T) {
 		}
 		return nil
 	})
-	var readerErr error
-	var readerStartCh = make(chan struct{}) // Signal to start read-only transaction
-	var readerReadCh = make(chan struct{})  // Signal to start reading within read-only transaction
-	var readerEndCh = make(chan struct{})   // Signal from the read-only transaction that it is finished reading
-	go func() {
-		// Wait for the start signal
-		<-readerStartCh
-		defer func() {
-			readerEndCh <- struct{}{}
-		}()
-		if err1 := env.View(func(txn *Txn) error {
+	var readerReadCh = make(chan struct{}) // Signal to start reading within read-only transaction
+	var readerErrCh = make(chan error)     // Signal from the read-only transaction that it is finished reading
+	err = env.Update(func(txn *Txn) (err error) {
+		readTx, err1 := env.BeginTxn(nil, Readonly)
+		if err1 != nil {
+			return err1
+		}
+		go func() {
+			defer func() {
+				readTx.Abort()
+			}()
 			<-readerReadCh
-			val, err2 := txn.Get(dbi, []byte("a"))
+			val, err2 := readTx.Get(dbi, []byte("a"))
 			if err2 != nil {
-				return err2
+				readerErrCh <- err2
+				return
 			}
 			if !bytes.Equal(val, []byte("1")) {
-				return fmt.Errorf("expected to read 1, got %s", val)
+				readerErrCh <- fmt.Errorf("expected a to read 1, got %s", val)
+				return
 			}
-			return nil
-		}); err1 != nil {
-			readerErr = err1
-		}
-	}()
-	err = env.Update(func(txn *Txn) (err error) {
-		readerStartCh <- struct{}{}
+			val, err2 = readTx.Get(dbi, []byte("b"))
+			if err2 != nil {
+				readerErrCh <- err2
+				return
+			}
+			if !bytes.Equal(val, []byte("1")) {
+				readerErrCh <- fmt.Errorf("expected b to read 1, got %s", val)
+				return
+			}
+			val, err2 = readTx.Get(dbi, []byte("c"))
+			if err2 != nil {
+				readerErrCh <- err2
+				return
+			}
+			if !bytes.Equal(val, []byte("1")) {
+				readerErrCh <- fmt.Errorf("expected c to read 1, got %s", val)
+				return
+			}
+			readerErrCh <- nil
+			return
+		}()
 		if err1 := txn.Put(dbi, []byte("a"), []byte("2"), 0); err1 != nil {
 			return err1
 		}
@@ -1152,14 +1168,13 @@ func TestTxn_Freelist_reuse(t *testing.T) {
 		if err1 := txn.Put(dbi, []byte("c"), []byte("3"), 0); err1 != nil {
 			return err1
 		}
-		<-readerEndCh
 		return nil
 	})
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	if readerErr != nil {
-		t.Errorf("Reader error: %v", readerErr)
+	if err = <-readerErrCh; err != nil {
+		t.Errorf("Reader error: %v", err)
 	}
 }
 

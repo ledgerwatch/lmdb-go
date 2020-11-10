@@ -2772,6 +2772,10 @@ mdb_txn_renew0(MDB_txn *txn)
 		}
 		txn->mt_txnid++;
 		if (txn->mt_txnid < 1000000) {
+			/* setting txnid to this large number ensures that the mdb_freelist_save function has enough
+			   avaliable tx IDs to split the records to never require more than 1 overflow page per record
+			   in practice. This avoids the situation when MAIN_DBI records themselves require search
+			   in the freelist records */
 			txn->mt_txnid = 1000000 + (txn->mt_txnid & 1);
 		}
 #if MDB_DEBUG
