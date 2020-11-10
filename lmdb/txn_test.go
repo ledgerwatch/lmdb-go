@@ -1066,15 +1066,14 @@ func TestTxn_Freelist_reuse(t *testing.T) {
 	defer runtime.UnlockOSThread()
 
 	var dbi DBI
-	err = env.Update(func(txn *Txn) (err error) {
+	if err1 := env.Update(func(txn *Txn) error {
 		dbi, err = txn.CreateDBI("testdb")
 		return err
-	})
-	if err != nil {
-		t.Errorf("%s", err)
+	}); err1 != nil {
+		t.Fatalf("crecting DBI: %v", err1)
 		return
 	}
-	err = env.Update(func(txn *Txn) (err error) {
+	if err = env.Update(func(txn *Txn) error {
 		if err1 := txn.Put(dbi, []byte("a"), []byte("1"), 0); err1 != nil {
 			return err1
 		}
@@ -1085,10 +1084,12 @@ func TestTxn_Freelist_reuse(t *testing.T) {
 			return err1
 		}
 		return nil
-	})
+	}); err != nil {
+		t.Fatalf("initial update: %v", err)
+	}
 	var readerReadCh = make(chan struct{}) // Signal to start reading within read-only transaction
 	var readerErrCh = make(chan error)     // Signal from the read-only transaction that it is finished reading
-	err = env.Update(func(txn *Txn) (err error) {
+	if err = env.Update(func(txn *Txn) error {
 		readTx, err1 := env.BeginTxn(nil, Readonly)
 		if err1 != nil {
 			return err1
@@ -1126,7 +1127,6 @@ func TestTxn_Freelist_reuse(t *testing.T) {
 				return
 			}
 			readerErrCh <- nil
-			return
 		}()
 		if err1 := txn.Put(dbi, []byte("a"), []byte("2"), 0); err1 != nil {
 			return err1
@@ -1138,11 +1138,10 @@ func TestTxn_Freelist_reuse(t *testing.T) {
 			return err1
 		}
 		return nil
-	})
-	if err != nil {
-		t.Errorf("%s", err)
+	}); err != nil {
+		t.Fatalf("second update: %v", err)
 	}
-	err = env.Update(func(txn *Txn) (err error) {
+	if err = env.Update(func(txn *Txn) error {
 		if err1 := txn.Put(dbi, []byte("a"), []byte("3"), 0); err1 != nil {
 			return err1
 		}
@@ -1153,28 +1152,26 @@ func TestTxn_Freelist_reuse(t *testing.T) {
 			return err1
 		}
 		return nil
-	})
-	if err != nil {
-		t.Errorf("%s", err)
+	}); err != nil {
+		t.Fatalf("third update: %v", err)
 	}
-	err = env.Update(func(txn *Txn) (err error) {
+	if err = env.Update(func(txn *Txn) error {
 		readerReadCh <- struct{}{}
-		if err1 := txn.Put(dbi, []byte("a"), []byte("3"), 0); err1 != nil {
+		if err1 := txn.Put(dbi, []byte("a"), []byte("4"), 0); err1 != nil {
 			return err1
 		}
-		if err1 := txn.Put(dbi, []byte("b"), []byte("3"), 0); err1 != nil {
+		if err1 := txn.Put(dbi, []byte("b"), []byte("4"), 0); err1 != nil {
 			return err1
 		}
-		if err1 := txn.Put(dbi, []byte("c"), []byte("3"), 0); err1 != nil {
+		if err1 := txn.Put(dbi, []byte("c"), []byte("4"), 0); err1 != nil {
 			return err1
 		}
 		return nil
-	})
-	if err != nil {
-		t.Errorf("%s", err)
+	}); err != nil {
+		t.Fatalf("forth update: %v", err)
 	}
 	if err = <-readerErrCh; err != nil {
-		t.Errorf("Reader error: %v", err)
+		t.Errorf("reader error: %v", err)
 	}
 }
 
