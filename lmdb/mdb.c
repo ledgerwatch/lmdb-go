@@ -2103,7 +2103,7 @@ static txnid_t
 mdb_find_oldest(MDB_txn *txn)
 {
 	int i;
-	txnid_t mr, oldest = txn->mt_txnid - 1;
+	txnid_t mr, oldest = txn->mt_txnid;
 	if (txn->mt_env->me_txns) {
 		MDB_reader *r = txn->mt_env->me_txns->mti_readers;
 		for (i = txn->mt_env->me_txns->mti_numreaders; --i >= 0; ) {
@@ -2768,7 +2768,7 @@ mdb_txn_renew0(MDB_txn *txn)
 			meta = mdb_env_pick_meta(env);
 			txn->mt_txnid = meta->mm_txnid;
 		}
-		txn->mt_txnid+=2;
+		txn->mt_txnid++;
 		if (txn->mt_txnid < 1000000) {
 			txn->mt_txnid = 1000000;
 		}
