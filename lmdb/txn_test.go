@@ -1051,6 +1051,130 @@ func TestTxn_Stat(t *testing.T) {
 	}
 }
 
+func TestTxn_Freelist_reuse(t *testing.T) {
+	env := setup(t)
+	path, err := env.Path()
+	if err != nil {
+		env.Close()
+		t.Error(err)
+		return
+	}
+	defer os.RemoveAll(path)
+	defer env.Close()
+
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	var dbi DBI
+	if err1 := env.Update(func(txn *Txn) error {
+		dbi, err = txn.CreateDBI("testdb")
+		return err
+	}); err1 != nil {
+		t.Fatalf("crecting DBI: %v", err1)
+		return
+	}
+	if err = env.Update(func(txn *Txn) error {
+		if err1 := txn.Put(dbi, []byte("a"), []byte("1"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("b"), []byte("1"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("c"), []byte("1"), 0); err1 != nil {
+			return err1
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("initial update: %v", err)
+	}
+	var readerReadCh = make(chan struct{}) // Signal to start reading within read-only transaction
+	var readerErrCh = make(chan error)     // Signal from the read-only transaction that it is finished reading
+	if err = env.Update(func(txn *Txn) error {
+		readTx, err1 := env.BeginTxn(nil, Readonly)
+		if err1 != nil {
+			return err1
+		}
+		go func() {
+			defer func() {
+				readTx.Abort()
+			}()
+			<-readerReadCh
+			val, err2 := readTx.Get(dbi, []byte("a"))
+			if err2 != nil {
+				readerErrCh <- err2
+				return
+			}
+			if !bytes.Equal(val, []byte("1")) {
+				readerErrCh <- fmt.Errorf("expected a to read 1, got %s", val)
+				return
+			}
+			val, err2 = readTx.Get(dbi, []byte("b"))
+			if err2 != nil {
+				readerErrCh <- err2
+				return
+			}
+			if !bytes.Equal(val, []byte("1")) {
+				readerErrCh <- fmt.Errorf("expected b to read 1, got %s", val)
+				return
+			}
+			val, err2 = readTx.Get(dbi, []byte("c"))
+			if err2 != nil {
+				readerErrCh <- err2
+				return
+			}
+			if !bytes.Equal(val, []byte("1")) {
+				readerErrCh <- fmt.Errorf("expected c to read 1, got %s", val)
+				return
+			}
+			readerErrCh <- nil
+		}()
+		if err1 := txn.Put(dbi, []byte("a"), []byte("2"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("b"), []byte("2"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("c"), []byte("2"), 0); err1 != nil {
+			return err1
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("second update: %v", err)
+	}
+	if err = env.Update(func(txn *Txn) error {
+		if err1 := txn.Put(dbi, []byte("a"), []byte("3"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("b"), []byte("3"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("c"), []byte("3"), 0); err1 != nil {
+			return err1
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("third update: %v", err)
+	}
+	if err = env.Update(func(txn *Txn) error {
+		readerReadCh <- struct{}{}
+		if err1 := txn.Put(dbi, []byte("a"), []byte("4"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("b"), []byte("4"), 0); err1 != nil {
+			return err1
+		}
+		if err1 := txn.Put(dbi, []byte("c"), []byte("4"), 0); err1 != nil {
+			return err1
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("forth update: %v", err)
+	}
+	if err = <-readerErrCh; err != nil {
+		t.Errorf("reader error: %v", err)
+	}
+}
+
 func BenchmarkTxn_Sub_commit(b *testing.B) {
 	env := setup(b)
 	path, err := env.Path()
