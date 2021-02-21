@@ -2056,7 +2056,10 @@ mdb_page_spill(MDB_cursor *m0, MDB_val *key, MDB_val *data)
 	if (need < MDB_IDL_UM_MAX / 8)
 		need = MDB_IDL_UM_MAX / 8;
 
-	fprintf(stderr, "%s:%d spill %d pages\n", mdb_func_, __LINE__, need);
+	struct timeval curtime;
+	struct timezone curzone;
+	gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] spill - before\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	/* Save the page IDs of all the pages we're flushing */
 	/* flush from the tail forward, this saves a lot of shifting later on. */
@@ -2088,9 +2091,15 @@ mdb_page_spill(MDB_cursor *m0, MDB_val *key, MDB_val *data)
 	}
 	mdb_midl_sort(txn->mt_spill_pgs);
 
+	gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] spill - before flush\n", env, curtime.tv_sec, curtime.tv_usec);
+
 	/* Flush the spilled part of dirty list */
 	if ((rc = mdb_page_flush(txn, i)) != MDB_SUCCESS)
 		goto done;
+
+    gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] spill - after\n", env, curtime.tv_sec, curtime.tv_usec);
 
 	/* Reset any dirty pages we kept that page_flush didn't see */
 	rc = mdb_pages_xkeep(m0, P_DIRTY|P_KEEP, i);
@@ -2373,6 +2382,12 @@ mdb_page_unspill(MDB_txn *txn, MDB_page *mp, MDB_page **ret)
 	unsigned x;
 	pgno_t pgno = mp->mp_pgno, pn = pgno << 1;
 
+	struct timeval curtime;
+	struct timezone curzone;
+	gettimeofday(&curtime, &curzone);
+	fprintf(stderr, "%p [%ld:%d] unspill - before\n", env, curtime.tv_sec, curtime.tv_usec);
+
+
 	for (tx2 = txn; tx2; tx2=tx2->mt_parent) {
 		if (!tx2->mt_spill_pgs)
 			continue;
@@ -2416,6 +2431,9 @@ mdb_page_unspill(MDB_txn *txn, MDB_page *mp, MDB_page **ret)
 			break;
 		}
 	}
+
+	fprintf(stderr, "%p [%ld:%d] unspill - after\n", env, curtime.tv_sec, curtime.tv_usec);
+
 	return MDB_SUCCESS;
 }
 
