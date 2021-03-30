@@ -1,6 +1,6 @@
 /* mdb_dump.c - memory-mapped database dump tool */
 /*
- * Copyright 2011-2020 Howard Chu, Symas Corp.
+ * Copyright 2011-2021 Howard Chu, Symas Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,12 +19,9 @@
 #include <unistd.h>
 #include <signal.h>
 #include "lmdb.h"
+#include "module.h"
 
-#ifdef _WIN32
-#define Z	"I"
-#else
-#define Z	"z"
-#endif
+#define Yu	MDB_PRIy(u)
 
 #define PRINT	1
 static int mode;
@@ -117,7 +114,7 @@ static int dumpit(MDB_txn *txn, MDB_dbi dbi, char *name)
 	if (name)
 		printf("database=%s\n", name);
 	printf("type=btree\n");
-	printf("mapsize=%" Z "u\n", info.me_mapsize);
+	printf("mapsize=%"Yu"\n", info.me_mapsize);
 	if (info.me_mapaddr)
 		printf("mapaddr=%p\n", info.me_mapaddr);
 	printf("maxreaders=%u\n", info.me_maxreaders);
@@ -157,7 +154,7 @@ static int dumpit(MDB_txn *txn, MDB_dbi dbi, char *name)
 
 static void usage(char *prog)
 {
-	fprintf(stderr, "usage: %s [-V] [-f output] [-l] [-n] [-p] [-a|-s subdb] dbpath\n", prog);
+	fprintf(stderr, "usage: %s [-V] [-f output] [-l] [-n] [-p] [-v] [-m module [-w password]] [-a|-s subdb] dbpath\n", prog);
 	exit(EXIT_FAILURE);
 }
 
@@ -171,6 +168,8 @@ int main(int argc, char *argv[])
 	char *envname;
 	char *subname = NULL;
 	int alldbs = 0, envflags = 0, list = 0;
+	char *module = NULL, *password = NULL, *errmsg;
+	void *mlm = NULL;
 
 	if (argc < 2) {
 		usage(prog);
@@ -181,10 +180,11 @@ int main(int argc, char *argv[])
 	 * -n: use NOSUBDIR flag on env_open
 	 * -p: use printable characters
 	 * -f: write to file instead of stdout
+	 * -v: use previous snapshot
 	 * -V: print version and exit
 	 * (default) dump only the main DB
 	 */
-	while ((i = getopt(argc, argv, "af:lnps:V")) != EOF) {
+	while ((i = getopt(argc, argv, "af:lm:nps:vw:V")) != EOF) {
 		switch(i) {
 		case 'V':
 			printf("%s\n", MDB_VERSION_STRING);
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'l':
 			list = 1;
-			/*FALLTHROUGH*/;
+			/*FALLTHROUGH*/
 		case 'a':
 			if (subname)
 				usage(prog);
@@ -208,6 +208,9 @@ int main(int argc, char *argv[])
 		case 'n':
 			envflags |= MDB_NOSUBDIR;
 			break;
+		case 'v':
+			envflags |= MDB_PREVSNAPSHOT;
+			break;
 		case 'p':
 			mode |= PRINT;
 			break;
@@ -215,6 +218,12 @@ int main(int argc, char *argv[])
 			if (alldbs)
 				usage(prog);
 			subname = optarg;
+			break;
+		case 'm':
+			module = optarg;
+			break;
+		case 'w':
+			password = optarg;
 			break;
 		default:
 			usage(prog);
@@ -240,6 +249,14 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	if (module) {
+		mlm = mlm_setup(env, module, password, &errmsg);
+		if (!mlm) {
+			fprintf(stderr, "Failed to load crypto module: %s\n", errmsg);
+			goto env_close;
+		}
+	}
+
 	if (alldbs || subname) {
 		mdb_env_set_maxdbs(env, 2);
 	}
@@ -256,9 +273,9 @@ int main(int argc, char *argv[])
 		goto env_close;
 	}
 
-	rc = mdb_open(txn, subname, 0, &dbi);
+	rc = mdb_dbi_open(txn, subname, 0, &dbi);
 	if (rc) {
-		fprintf(stderr, "mdb_open failed, error %d %s\n", rc, mdb_strerror(rc));
+		fprintf(stderr, "mdb_dbi_open failed, error %d %s\n", rc, mdb_strerror(rc));
 		goto txn_abort;
 	}
 
@@ -273,27 +290,22 @@ int main(int argc, char *argv[])
 			goto txn_abort;
 		}
 		while ((rc = mdb_cursor_get(cursor, &key, NULL, MDB_NEXT_NODUP)) == 0) {
-			char *str;
 			MDB_dbi db2;
-			if (memchr(key.mv_data, '\0', key.mv_size))
+			if (!mdb_cursor_is_db(cursor))
 				continue;
 			count++;
-			str = malloc(key.mv_size+1);
-			memcpy(str, key.mv_data, key.mv_size);
-			str[key.mv_size] = '\0';
-			rc = mdb_open(txn, str, 0, &db2);
+			rc = mdb_dbi_open(txn, key.mv_data, 0, &db2);
 			if (rc == MDB_SUCCESS) {
 				if (list) {
-					printf("%s\n", str);
+					printf("%s\n", (char *)key.mv_data);
 					list++;
 				} else {
-					rc = dumpit(txn, db2, str);
+					rc = dumpit(txn, db2, key.mv_data);
 					if (rc)
 						break;
 				}
-				mdb_close(env, db2);
+				mdb_dbi_close(env, db2);
 			}
-			free(str);
 			if (rc) continue;
 		}
 		mdb_cursor_close(cursor);
@@ -314,6 +326,8 @@ txn_abort:
 	mdb_txn_abort(txn);
 env_close:
 	mdb_env_close(env);
+	if (mlm)
+		mlm_unload(mlm);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

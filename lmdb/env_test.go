@@ -222,6 +222,7 @@ func TestEnv_SetMaxReader(t *testing.T) {
 	}
 }
 
+/*
 func TestEnv_SetMaxFreelistReuse(t *testing.T) {
 	dir, err := ioutil.TempDir("", "test-env-setmaxfreelistreuse-")
 	if err != nil {
@@ -248,6 +249,7 @@ func TestEnv_SetMaxFreelistReuse(t *testing.T) {
 		t.Errorf("unexpected MaxFreelistReuse: %v (!= %v)", _pages, pages)
 	}
 }
+*/
 
 func TestEnv_SetMapSize(t *testing.T) {
 	env := setup(t)

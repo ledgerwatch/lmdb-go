@@ -345,17 +345,17 @@ func (env *Env) Path() (string, error) {
 // Find a big enough contiguous page range for large values in freelist is hard
 //        just allocate new pages and even don't try to search if value is bigger than this limit.
 //        measured in pages
-func (env *Env) SetMaxFreelistReuse(pagesLimit uint) error {
-	ret := C.mdb_env_set_maxfree_reuse(env._env, C.uint(pagesLimit))
-	return operrno("mdb_env_set_maxfree_reuse", ret)
-}
+//func (env *Env) SetMaxFreelistReuse(pagesLimit uint) error {
+//	ret := C.mdb_env_set_maxfree_reuse(env._env, C.uint(pagesLimit))
+//	return operrno("mdb_env_set_maxfree_reuse", ret)
+//}
 
 // MaxFreelistReuse
-func (env *Env) MaxFreelistReuse() (uint, error) {
-	var pages C.uint
-	ret := C.mdb_env_get_maxfree_reuse(env._env, &pages)
-	return uint(pages), operrno("mdb_env_get_maxreaders", ret)
-}
+//func (env *Env) MaxFreelistReuse() (uint, error) {
+//	var pages C.uint
+//	ret := C.mdb_env_get_maxfree_reuse(env._env, &pages)
+//	return uint(pages), operrno("mdb_env_get_maxreaders", ret)
+//}
 
 // SetMapSize sets the size of the environment memory map.
 //

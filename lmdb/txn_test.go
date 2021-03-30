@@ -201,10 +201,13 @@ func TestTxn_Del(t *testing.T) {
 	env := setup(t)
 	defer clean(env, t)
 
-	db, err := openRoot(env, 0)
+	var db DBI
+	err := env.Update(func(txn *Txn) (err error) {
+		db, err = txn.CreateDBI("alex")
+		return err
+	})
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
 
 	err = env.Update(func(txn *Txn) (err error) {
@@ -215,7 +218,13 @@ func TestTxn_Del(t *testing.T) {
 	}
 
 	err = env.Update(func(txn *Txn) (err error) {
-		return txn.Del(db, []byte("k"), []byte("valignored"))
+		e := txn.Del(db, []byte("k"), []byte("v"))
+		if e != nil {
+			fmt.Printf("5: %s\n", e)
+			return e
+		}
+		fmt.Printf("6: %s\n", e)
+		return nil
 	})
 	if err != nil {
 		t.Error(err)
@@ -1499,7 +1508,7 @@ func openRoot(env *Env, flags uint) (DBI, error) {
 		dotxn = env.Update
 	}
 	err := dotxn(func(txn *Txn) (err error) {
-		db, err = txn.OpenRoot(flags)
+		db, err = txn.CreateDBI("a")
 		return err
 	})
 	if err != nil {

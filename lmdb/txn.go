@@ -9,6 +9,7 @@ package lmdb
 import "C"
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 	"unsafe"
@@ -97,6 +98,7 @@ func beginTxn(env *Env, parent *Txn, flags uint) (*Txn, error) {
 		txn.val = parent.val
 	}
 	ret := C.mdb_txn_begin(env._env, ptxn, C.uint(flags), &txn._txn)
+	fmt.Printf("abc: %t\n", txn._txn == nil)
 	if ret != success {
 		return nil, operrno("mdb_txn_begin", ret)
 	}
@@ -155,10 +157,15 @@ func (txn *Txn) runOpTerm(fn TxnOp) error {
 	// check txn.managed.
 	txn.managed = true
 
+	fmt.Printf("abc2: %t\n", txn._txn == nil)
 	err := fn(txn)
+	fmt.Printf("abc3: %t\n", txn._txn == nil)
+
 	if err != nil {
+		fmt.Printf("err: %s\n", err)
 		return err
 	}
+	fmt.Printf("a?: %s\n", err)
 
 	return txn.commit()
 }
@@ -191,7 +198,9 @@ func (txn *Txn) Commit() error {
 
 func (txn *Txn) commit() error {
 	ret := C.mdb_txn_commit(txn._txn)
+	fmt.Printf("commit done: %t\n", txn._txn == nil)
 	txn.clearTxn()
+	fmt.Printf("commit done2: %t, %d\n", txn._txn == nil, ret)
 	return operrno("mdb_txn_commit", ret)
 }
 
@@ -209,9 +218,13 @@ func (txn *Txn) Abort() {
 }
 
 func (txn *Txn) abort() {
+	fmt.Printf("abort\n")
+	fmt.Printf("abc4: %t\n", txn._txn == nil)
 	if txn._txn == nil {
+		fmt.Printf("abort3\n")
 		return
 	}
+	fmt.Printf("abort2\n")
 
 	// Get a read-lock on the environment so we can abort txn if needed.
 	// txn.env **should** terminate all readers otherwise when it closes.
@@ -220,6 +233,7 @@ func (txn *Txn) abort() {
 		C.mdb_txn_abort(txn._txn)
 	}
 	txn.env.closeLock.RUnlock()
+	fmt.Printf("abort3\n")
 
 	txn.clearTxn()
 }
