@@ -39,4 +39,4 @@ clean:
 	cd lmdb && make clean
 
 tools:
-	cd dist && make clean && make mdb_stat && make mdb_copy && make mdb_dump && make mdb_load  # use DESTDIR
+	cd lmdb && make clean && make mdb_stat && make mdb_copy && make mdb_dump && make mdb_load  # use DESTDIR
