@@ -14,7 +14,6 @@ linters:
     - goconst
     - gofmt
     - golint
-    - interfacer
     - govet
     - structcheck
     - stylecheck
@@ -31,7 +30,6 @@ linters:
     - depguard
     - typecheck
     - misspell
-    - maligned
 
 linters-settings:
   gofmt:
