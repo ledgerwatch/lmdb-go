@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"syscall"
 	"testing"
@@ -431,6 +432,9 @@ func TestEnv_CopyFDFlags_zero(t *testing.T) {
 }
 
 func testEnvCopy(t *testing.T, flags uint, useflags bool, usefd bool) {
+	if runtime.GOOS == "windows" {
+		t.Skip("env funcs not supported on windows")
+	}
 	dircp, err := ioutil.TempDir("", "test-env-copy-")
 	if err != nil {
 		t.Fatal(err)
