@@ -131,7 +131,8 @@ details about dealing with such situations.
 package lmdb
 
 /*
-#cgo CFLAGS: -pthread -W -Wall -Wno-implicit-fallthrough -Wno-unused-parameter -Wno-format-extra-args -Wbad-function-cast -Wno-missing-field-initializers -O2 -g
+#cgo !windows CFLAGS: -pthread -W -Wall -Wno-implicit-fallthrough -Wno-unused-parameter -Wno-format-extra-args -Wbad-function-cast -Wno-missing-field-initializers -O2 -g
+#cgo windows CFLAGS: -pthread -W -Wall -Wno-stringop-overflow -Wno-return-local-addr -Wno-array-bounds -Wno-format -Wno-implicit-fallthrough -Wno-unused-parameter -Wno-format-extra-args -Wbad-function-cast -Wno-missing-field-initializers -O2 -g
 #cgo linux,pwritev CFLAGS: -DMDB_USE_PWRITEV
 
 #include "lmdb.h"
