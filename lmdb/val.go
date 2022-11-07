@@ -113,6 +113,9 @@ func wrapVal(b []byte) *C.MDB_val {
 }
 
 func getBytes(val *C.MDB_val) []byte {
+	if val.mv_size == 0 {
+		return []byte{}
+	}
 	return (*[valMaxSize]byte)(val.mv_data)[:val.mv_size:val.mv_size]
 }
 
